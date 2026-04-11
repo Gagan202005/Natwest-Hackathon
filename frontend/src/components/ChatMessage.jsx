@@ -6,7 +6,7 @@ import ChartRenderer from './ChartRenderer';
 import ConfidenceScore from './ConfidenceScore';
 import CodeBlock from './CodeBlock';
 
-export default function ChatMessage({ message }) {
+export default function ChatMessage({ message, onSendMessage }) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const isError = message.isError;
@@ -120,7 +120,13 @@ export default function ChatMessage({ message }) {
 
             {/* Chart */}
             {hasChart && (
-              <ChartRenderer chart={message.chart} matplotlib_image={message.matplotlib_image} />
+              <ChartRenderer
+                chart={message.chart}
+                matplotlib_image={message.matplotlib_image}
+                onExplain={message.matplotlib_image && onSendMessage
+                  ? () => onSendMessage('Explain this figure in detail — describe the key patterns, trends, and insights visible in the chart.')
+                  : undefined}
+              />
             )}
 
             {/* Confidence Score */}

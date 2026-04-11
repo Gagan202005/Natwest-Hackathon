@@ -7,7 +7,7 @@ import {
   AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Sparkles } from 'lucide-react';
 
 const CHART_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
 
@@ -31,7 +31,7 @@ const gridStyle = {
   stroke: 'rgba(255,255,255,0.07)',
 };
 
-export default function ChartRenderer({ chart, matplotlib_image }) {
+export default function ChartRenderer({ chart, matplotlib_image, onExplain }) {
   // If we have a matplotlib base64 image, render that instead
   if (matplotlib_image) {
     return (
@@ -49,6 +49,20 @@ export default function ChartRenderer({ chart, matplotlib_image }) {
             style={{ maxHeight: '400px' }}
           />
         </div>
+        {onExplain && (
+          <div className="px-3 pb-3 flex justify-center">
+            <button
+              onClick={onExplain}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium
+                         bg-[rgba(139,92,246,0.12)] text-[#a78bfa] border border-[rgba(139,92,246,0.25)]
+                         hover:bg-[rgba(139,92,246,0.22)] hover:border-[rgba(139,92,246,0.45)]
+                         transition-all duration-150 cursor-pointer"
+            >
+              <Sparkles size={12} />
+              Explain this figure
+            </button>
+          </div>
+        )}
       </div>
     );
   }

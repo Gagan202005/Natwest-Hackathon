@@ -82,7 +82,7 @@ function App() {
             )}
 
             {chat.messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
+              <ChatMessage key={msg.id} message={msg} onSendMessage={chat.sendMessage} />
             ))}
 
             {chat.error && !chat.isLoading && chat.messages.length === 0 && (
