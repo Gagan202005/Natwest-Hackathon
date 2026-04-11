@@ -2,13 +2,42 @@
 DuckDB persistent database manager.
 Each session gets its own .duckdb file — survives server restarts.
 Far faster than SQLite for analytical queries on uploaded CSVs.
+
+Key fix: execute_query now serializes dates/decimals/numpy types
+so the result can be passed directly to json.dumps without errors.
 """
 import os
+import decimal
+import datetime
 import duckdb
 import pandas as pd
 from typing import Any
 
 os.makedirs("sessions", exist_ok=True)
+
+
+def _serialize_value(v: Any) -> Any:
+    """Convert non-JSON-serializable DB values to safe Python types."""
+    if v is None:
+        return None
+    if isinstance(v, (datetime.date, datetime.datetime)):
+        return v.isoformat()
+    if isinstance(v, datetime.time):
+        return v.isoformat()
+    if isinstance(v, decimal.Decimal):
+        return float(v)
+    # numpy scalars (int64, float64, etc.)
+    try:
+        import numpy as np
+        if isinstance(v, (np.integer,)):
+            return int(v)
+        if isinstance(v, (np.floating,)):
+            return float(v)
+        if isinstance(v, np.bool_):
+            return bool(v)
+    except ImportError:
+        pass
+    return v
 
 
 class DatabaseManager:
@@ -30,12 +59,18 @@ class DatabaseManager:
         self.connection.unregister("_df_temp")
 
     def execute_query(self, sql: str) -> dict[str, Any]:
-        """Execute a SQL query and return results."""
+        """
+        Execute a SQL query and return results.
+        All values are serialized to JSON-safe Python types.
+        """
         try:
             result = self.connection.execute(sql)
             columns = [desc[0] for desc in result.description] if result.description else []
             rows = result.fetchall()
-            data = [dict(zip(columns, row)) for row in rows]
+            data = [
+                {col: _serialize_value(val) for col, val in zip(columns, row)}
+                for row in rows
+            ]
             return {
                 "success": True,
                 "data": data,
@@ -59,6 +94,17 @@ class DatabaseManager:
         except Exception:
             return 0
 
+    def get_column_names(self) -> list[str]:
+        """Return all column names in the main table."""
+        try:
+            result = self.connection.execute(
+                f"SELECT column_name FROM information_schema.columns "
+                f"WHERE table_name = '{self.table_name}'"
+            )
+            return [row[0] for row in result.fetchall()]
+        except Exception:
+            return []
+
     def close(self):
         """Close the DuckDB connection."""
         try:
@@ -71,7 +117,6 @@ class DatabaseManager:
         try:
             if os.path.exists(self.db_path):
                 os.remove(self.db_path)
-            # DuckDB may also create a .duckdb.wal write-ahead log
             wal_path = self.db_path + ".wal"
             if os.path.exists(wal_path):
                 os.remove(wal_path)
