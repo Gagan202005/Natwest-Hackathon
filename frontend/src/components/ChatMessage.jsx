@@ -113,11 +113,6 @@ export default function ChatMessage({ message, onSendMessage }) {
               <CodeBlock code={message.sql_query} language="sql" title="SQL Query" />
             )}
 
-            {/* Python Code (collapsible) */}
-            {message.python_code && (
-              <CodeBlock code={message.python_code} language="python" title="Python Code" />
-            )}
-
             {/* Chart */}
             {hasChart && (
               <ChartRenderer
