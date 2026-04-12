@@ -5,61 +5,49 @@ import {
   PieChart, Pie, Cell,
   ScatterChart, Scatter,
   AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { BarChart3, Sparkles } from 'lucide-react';
 
-const CHART_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
+const CHART_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
 
+/* Light-theme styles */
 const tooltipStyle = {
-  backgroundColor: '#1f2937',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: '8px',
-  color: '#f1f5f9',
-  fontSize: '12px',
+  backgroundColor: '#ffffff',
+  border: '1px solid #e5e3de',
+  borderRadius: 8,
+  color: '#1a1a1a',
+  fontSize: 12,
   padding: '8px 12px',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
 };
-
-const axisStyle = {
-  stroke: '#94a3b8',
-  fontSize: 11,
-  fontFamily: 'Inter, sans-serif',
-};
-
-const gridStyle = {
-  strokeDasharray: '3 3',
-  stroke: 'rgba(255,255,255,0.07)',
-};
+const axisStyle  = { stroke: '#9b9b9b', fontSize: 11, fontFamily: '"DM Sans", sans-serif' };
+const gridStyle  = { strokeDasharray: '3 3', stroke: 'rgba(0,0,0,0.06)' };
 
 export default function ChartRenderer({ chart, matplotlib_image, onExplain }) {
-  // If we have a matplotlib base64 image, render that instead
+  /* Matplotlib base64 image */
   if (matplotlib_image) {
     return (
-      <div className="my-3 rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)] bg-[#111827]/60">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-[rgba(255,255,255,0.06)] text-xs text-[#94a3b8]">
-          <BarChart3 size={13} />
-          <span className="font-medium">Chart Output</span>
+      <div className="chart-container" style={{ marginTop: 12 }}>
+        <div className="chart-container-header">
+          <BarChart3 size={13} style={{ color: 'var(--accent)' }} />
+          <span>Chart Output</span>
         </div>
-        <div className="p-2 flex justify-center">
+        <div style={{ padding: '14px 14px 10px', display: 'flex', justifyContent: 'center', background: '#ffffff' }}>
           <img
             src={`data:image/png;base64,${matplotlib_image}`}
             alt="Chart"
-            className="max-w-full h-auto rounded-lg"
             loading="lazy"
-            style={{ maxHeight: '400px' }}
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, maxHeight: 420 }}
           />
         </div>
         {onExplain && (
-          <div className="px-3 pb-3 flex justify-center">
+          <div style={{ padding: '0 14px 14px', display: 'flex', justifyContent: 'center' }}>
             <button
               onClick={onExplain}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium
-                         bg-[rgba(139,92,246,0.12)] text-[#a78bfa] border border-[rgba(139,92,246,0.25)]
-                         hover:bg-[rgba(139,92,246,0.22)] hover:border-[rgba(139,92,246,0.45)]
-                         transition-all duration-150 cursor-pointer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 16px', borderRadius: 99, border: '1px solid rgba(79,70,229,0.25)', background: 'var(--accent-light)', color: 'var(--accent)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              <Sparkles size={12} />
-              Explain this figure
+              <Sparkles size={12} /> Explain this chart
             </button>
           </div>
         )}
@@ -67,22 +55,18 @@ export default function ChartRenderer({ chart, matplotlib_image, onExplain }) {
     );
   }
 
-  // No chart data
   if (!chart || !chart.data || chart.data.length === 0) return null;
 
   const { type, data, x_key, y_key, title } = chart;
 
   return (
-    <div className="my-3 rounded-xl overflow-hidden border border-[rgba(255,255,255,0.08)] bg-[#111827]/60">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[rgba(255,255,255,0.06)] text-xs text-[#94a3b8]">
-        <BarChart3 size={13} className="text-[#8b5cf6]" />
-        <span className="font-medium">{title || 'Chart'}</span>
-        <span className="ml-auto text-[10px] text-[#64748b]">{type}</span>
+    <div className="chart-container" style={{ marginTop: 12 }}>
+      <div className="chart-container-header">
+        <BarChart3 size={13} style={{ color: 'var(--accent)' }} />
+        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{title || 'Chart'}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-xmuted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type}</span>
       </div>
-
-      {/* Chart Area */}
-      <div className="p-4" style={{ height: 320 }}>
+      <div className="chart-container-body" style={{ height: 320, background: '#ffffff' }}>
         <ResponsiveContainer width="100%" height="100%">
           {renderChart(type, data, x_key, y_key)}
         </ResponsiveContainer>
@@ -94,23 +78,17 @@ export default function ChartRenderer({ chart, matplotlib_image, onExplain }) {
 function renderChart(type, data, x_key, y_key) {
   const yKeys = Array.isArray(y_key) ? y_key : [y_key];
 
-  // Rotate x-axis labels if many data points to prevent overlap
   const xAxisProps = {
     ...axisStyle,
     dataKey: x_key,
-    ...(data.length > 10 ? {
-      angle: -35,
-      textAnchor: 'end',
-      height: 55,
-      interval: 0,
-    } : {}),
+    tick: { ...axisStyle },
+    ...(data.length > 10 ? { angle: -35, textAnchor: 'end', height: 55, interval: 0 } : {}),
   };
 
-  // Format large Y-axis numbers compactly (e.g. 1500 → 1.5k)
   const yAxisFormatter = (v) => {
     if (typeof v !== 'number') return v;
     if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-    if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+    if (Math.abs(v) >= 1_000)     return `${(v / 1_000).toFixed(1)}k`;
     return v;
   };
 
@@ -120,17 +98,11 @@ function renderChart(type, data, x_key, y_key) {
         <BarChart data={data} margin={{ bottom: data.length > 10 ? 30 : 5 }}>
           <CartesianGrid {...gridStyle} />
           <XAxis {...xAxisProps} />
-          <YAxis {...axisStyle} tickFormatter={yAxisFormatter} />
-          <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <YAxis {...axisStyle} tick={{ ...axisStyle }} tickFormatter={yAxisFormatter} />
+          <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(79,70,229,0.04)' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
           {yKeys.map((key, i) => (
-            <Bar
-              key={key}
-              dataKey={key}
-              fill={CHART_COLORS[i % CHART_COLORS.length]}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={50}
-            />
+            <Bar key={key} dataKey={key} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} maxBarSize={50} />
           ))}
         </BarChart>
       );
@@ -140,19 +112,11 @@ function renderChart(type, data, x_key, y_key) {
         <LineChart data={data} margin={{ bottom: data.length > 10 ? 30 : 5 }}>
           <CartesianGrid {...gridStyle} />
           <XAxis {...xAxisProps} />
-          <YAxis {...axisStyle} tickFormatter={yAxisFormatter} />
+          <YAxis {...axisStyle} tick={{ ...axisStyle }} tickFormatter={yAxisFormatter} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
           {yKeys.map((key, i) => (
-            <Line
-              key={key}
-              type="monotone"
-              dataKey={key}
-              stroke={CHART_COLORS[i % CHART_COLORS.length]}
-              strokeWidth={2}
-              dot={{ r: 3, fill: CHART_COLORS[i % CHART_COLORS.length] }}
-              activeDot={{ r: 5 }}
-            />
+            <Line key={key} type="monotone" dataKey={key} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
           ))}
         </LineChart>
       );
@@ -162,19 +126,11 @@ function renderChart(type, data, x_key, y_key) {
         <AreaChart data={data} margin={{ bottom: data.length > 10 ? 30 : 5 }}>
           <CartesianGrid {...gridStyle} />
           <XAxis {...xAxisProps} />
-          <YAxis {...axisStyle} tickFormatter={yAxisFormatter} />
+          <YAxis {...axisStyle} tick={{ ...axisStyle }} tickFormatter={yAxisFormatter} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
           {yKeys.map((key, i) => (
-            <Area
-              key={key}
-              type="monotone"
-              dataKey={key}
-              stroke={CHART_COLORS[i % CHART_COLORS.length]}
-              fill={CHART_COLORS[i % CHART_COLORS.length]}
-              fillOpacity={0.15}
-              strokeWidth={2}
-            />
+            <Area key={key} type="monotone" dataKey={key} stroke={CHART_COLORS[i % CHART_COLORS.length]} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.1} strokeWidth={2.5} />
           ))}
         </AreaChart>
       );
@@ -182,24 +138,14 @@ function renderChart(type, data, x_key, y_key) {
     case 'pie':
       return (
         <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={100}
-            dataKey={yKeys[0]}
-            nameKey={x_key}
-            paddingAngle={2}
+          <Pie data={data} cx="50%" cy="50%" innerRadius={65} outerRadius={105} dataKey={yKeys[0]} nameKey={x_key} paddingAngle={2}
             label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-            labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
+            labelLine={{ stroke: '#9b9b9b', strokeWidth: 1 }}
           >
-            {data.map((_, i) => (
-              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-            ))}
+            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
           </Pie>
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
         </PieChart>
       );
 
@@ -207,27 +153,24 @@ function renderChart(type, data, x_key, y_key) {
       return (
         <ScatterChart>
           <CartesianGrid {...gridStyle} />
-          <XAxis dataKey={x_key} name={x_key} {...axisStyle} />
-          <YAxis dataKey={yKeys[0]} name={yKeys[0]} {...axisStyle} />
+          <XAxis dataKey={x_key} name={x_key} {...axisStyle} tick={{ ...axisStyle }} />
+          <YAxis dataKey={yKeys[0]} name={yKeys[0]} {...axisStyle} tick={{ ...axisStyle }} />
           <Tooltip contentStyle={tooltipStyle} cursor={{ strokeDasharray: '3 3' }} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
           <Scatter name={yKeys[0]} data={data} fill={CHART_COLORS[0]}>
-            {data.map((_, i) => (
-              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-            ))}
+            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
           </Scatter>
         </ScatterChart>
       );
 
     default:
-      // Fallback to bar chart
       return (
         <BarChart data={data}>
           <CartesianGrid {...gridStyle} />
-          <XAxis dataKey={x_key} {...axisStyle} />
-          <YAxis {...axisStyle} />
+          <XAxis dataKey={x_key} {...axisStyle} tick={{ ...axisStyle }} />
+          <YAxis {...axisStyle} tick={{ ...axisStyle }} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-secondary)' }} />
           {yKeys.map((key, i) => (
             <Bar key={key} dataKey={key} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} />
           ))}

@@ -1,20 +1,43 @@
-import React, { useState, useCallback } from 'react';
-import { Bot, PanelLeftClose, PanelLeft } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { PanelLeftClose, PanelLeft, Database } from 'lucide-react';
 import FileUpload from './components/FileUpload';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import WelcomeScreen from './components/WelcomeScreen';
 import Sidebar from './components/Sidebar';
+import BackendStatus from './components/BackendStatus';
 import { useChat } from './hooks/useChat';
 
-function App() {
+const PROCESSING_STAGES = [
+  'Analyzing your question…',
+  'Querying your data…',
+  'Processing results…',
+  'Generating response…',
+];
+
+export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
-  
+  const [stageIdx, setStageIdx] = useState(0);
+  const stageTimer = useRef(null);
+
   const chat = useChat();
 
+  // Cycle through processing stages while loading
+  useEffect(() => {
+    if (chat.isLoading) {
+      setStageIdx(0);
+      stageTimer.current = setInterval(() => {
+        setStageIdx(i => (i + 1) % PROCESSING_STAGES.length);
+      }, 2200);
+    } else {
+      clearInterval(stageTimer.current);
+    }
+    return () => clearInterval(stageTimer.current);
+  }, [chat.isLoading]);
+
   const handleSuggestionClick = useCallback((text) => {
-    if (text === 'Upload a dataset to start') {
+    if (text === '__upload__') {
       setShowUpload(true);
     } else {
       chat.sendMessage(text);
@@ -24,8 +47,8 @@ function App() {
   const hasMessages = chat.messages.length > 0;
 
   return (
-    <div className="h-screen flex bg-mesh overflow-hidden">
-      {/* ──── Sidebar ──── */}
+    <div className="app-shell">
+      {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         fileData={chat.fileInfo}
@@ -40,91 +63,89 @@ function App() {
         onUpdateSensitiveColumns={chat.setSensitiveColumns}
       />
 
-      {/* ──── Main ──── */}
-      <main className="flex-1 flex flex-col min-w-0">
+      {/* Main */}
+      <div className="main-area">
         {/* Topbar */}
-        <header className="glass-strong border-b border-[#2a2a4a]/40 px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-xl text-[#6a6a8a] hover:text-white hover:bg-[#2a2a4a]/40 transition-all duration-200"
-          >
-            {sidebarOpen ? <PanelLeftClose size={17} /> : <PanelLeft size={17} />}
+        <header className="topbar">
+          <button className="topbar-btn" onClick={() => setSidebarOpen(v => !v)} title="Toggle sidebar">
+            {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
           </button>
-          <div className="h-4 w-px bg-[#2a2a4a]" />
-          <div className="flex items-center gap-2">
-            <Bot size={16} className="text-[#a78bfa]" />
-            <span className="text-sm font-semibold text-white">
-              {chat.fileInfo ? chat.fileInfo.name : 'New Conversation'}
-            </span>
-          </div>
+          <div className="topbar-divider" />
+          <span className="topbar-title">
+            {chat.fileInfo ? chat.fileInfo.name : 'DataTalk'}
+          </span>
           {chat.fileInfo && (
-            <span className="ml-auto px-3 py-1 rounded-full text-[10px] font-semibold bg-[#2dd4bf]/10 text-[#2dd4bf] border border-[#2dd4bf]/20">
-              Dataset Active
-            </span>
+            <span className="topbar-badge" style={{ marginLeft: 4 }}>Dataset active</span>
           )}
+          <div style={{ flex: 1 }} />
+          <BackendStatus />
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="max-w-4xl mx-auto">
-            {!hasMessages && !showUpload && !chat.fileInfo && (
-              <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
+        <div className="messages-viewport">
+          <div className="messages-inner">
+            {!hasMessages && !showUpload && (
+              <WelcomeScreen onAction={handleSuggestionClick} hasDataset={!!chat.fileInfo} />
             )}
 
-            {(showUpload || (!chat.fileInfo && !hasMessages && showUpload)) && (
-              <div className="max-w-lg mx-auto py-12">
-                <FileUpload 
+            {showUpload && (
+              <div style={{ maxWidth: 480, margin: '32px auto' }}>
+                <FileUpload
                   onFileLoaded={(file) => {
                     setShowUpload(false);
                     chat.handleUpload(file);
-                  }} 
-                  disabled={chat.isLoading} 
+                  }}
+                  disabled={chat.isLoading}
                 />
               </div>
             )}
 
             {chat.messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} onSendMessage={chat.sendMessage} />
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                onSendMessage={chat.sendMessage}
+              />
             ))}
 
-            {chat.error && !chat.isLoading && chat.messages.length === 0 && (
-                <div className="flex justify-center mb-5 anim-fade-in-up">
-                  <div className="glass-card !border-red-500/30 px-5 py-3 max-w-[80%] text-center shadow-lg shadow-red-500/10">
-                      <p className="text-red-400 text-sm font-medium">{chat.error}</p>
-                  </div>
-                </div>
-            )}
-
             {chat.isLoading && (
-              <div className="flex gap-3 mb-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#5b21b6]/25 to-[#2dd4bf]/15 border border-[#5b21b6]/20 flex items-center justify-center">
-                  <Bot size={15} className="text-[#a78bfa]" />
+              <div className="thinking-wrapper">
+                <div className="msg-ai-avatar">
+                  <Database size={13} />
                 </div>
-                <div className="chat-bubble-bot">
-                  <div className="typing-indicator">
-                    <span></span><span></span><span></span>
+                <div>
+                  <div className="thinking-dots">
+                    <span /><span /><span />
                   </div>
+                  <div className="thinking-text">{PROCESSING_STAGES[stageIdx]}</div>
                 </div>
               </div>
             )}
+
+            {chat.error && !chat.isLoading && !hasMessages && (
+              <div className="msg-system anim-fade-in">
+                <div className="msg-system-card" style={{ color: 'var(--error)', borderColor: 'rgba(220,38,38,0.2)', background: '#fef2f2' }}>
+                  {chat.error}
+                </div>
+              </div>
+            )}
+
             <div ref={chat.messagesEndRef} />
           </div>
         </div>
 
         {/* Input */}
-        <div className="border-t border-[#2a2a4a]/20 px-4 sm:px-6 lg:px-8 py-4">
-          <div className="max-w-4xl mx-auto">
+        <div className="input-area">
+          <div className="input-inner">
             <ChatInput
               onSend={chat.sendMessage}
               onFileClick={() => setShowUpload(true)}
               disabled={chat.isLoading}
-              placeholder={chat.fileInfo ? `Ask about ${chat.fileInfo.name}...` : 'Upload a dataset or ask a question...'}
+              placeholder={chat.fileInfo ? `Ask about ${chat.fileInfo.name}…` : 'Upload a dataset or ask a question…'}
             />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
-
-export default App;

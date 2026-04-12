@@ -1,78 +1,63 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { User, Bot, FileSpreadsheet, Terminal, CheckCircle2, AlertCircle, Clock, Cpu } from 'lucide-react';
+import { Database, FileSpreadsheet, Copy, Check, AlertCircle, ChevronRight } from 'lucide-react';
 import DataSummary from './DataSummary';
 import ChartRenderer from './ChartRenderer';
 import ConfidenceScore from './ConfidenceScore';
-import CodeBlock from './CodeBlock';
 
 export default function ChatMessage({ message, onSendMessage }) {
-  const isUser = message.role === 'user';
+  const isUser   = message.role === 'user';
   const isSystem = message.role === 'system';
-  const isError = message.isError;
+  const isError  = message.isError;
 
-  // Format timestamp
   const timeStr = message.timestamp
     ? new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : null;
 
-  // System messages
+  /* ── System / upload confirmation ── */
   if (isSystem) {
     return (
-      <div className="flex justify-center mb-5 animate-fade-in-up">
-        <div className="glass-card px-5 py-4 max-w-[85%] text-center space-y-3">
+      <div className="msg-system">
+        <div className="msg-system-card">
           <MarkdownContent content={message.content} />
 
-          {/* 1. Anomaly Detection Box — TOP */}
+          {/* Anomalies */}
           {message.anomalies && message.anomalies.length > 0 && (
-            <div className="mt-3 rounded-xl border border-[#f59e0b]/30 bg-[#f59e0b]/6 p-4 text-left">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">🚨</span>
-                <span className="text-[12px] font-bold text-[#f59e0b] uppercase tracking-wide">
-                  {message.anomalies.length} Anomaly Group{message.anomalies.length > 1 ? 's' : ''} Detected
-                </span>
-              </div>
-              <div className="space-y-2 mb-3">
-                {message.anomalies.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 bg-[#f59e0b]/8 rounded-lg px-3 py-2">
-                    <span className="text-[11px] text-[#fcd34d]">{a.message}</span>
-                    <span className="flex-shrink-0 text-[10px] font-bold text-[#f59e0b] bg-[#f59e0b]/15 px-2 py-0.5 rounded-full">
-                      {a.count} rows
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2">
+            <div className="info-card anomaly-card" style={{ textAlign: 'left' }}>
+              <div className="info-card-label">{message.anomalies.length} anomaly group{message.anomalies.length > 1 ? 's' : ''} detected</div>
+              {message.anomalies.map((a, i) => (
+                <div key={i} className="anomaly-row">
+                  <span className="anomaly-msg">{a.message}</span>
+                  <span className="anomaly-count">{a.count} rows</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
                 {message.anomalies.map((a, i) => (
                   <button
                     key={i}
-                    onClick={() => onSendMessage && onSendMessage(`Show me the suspicious values in the '${a.column}' column`)}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/30 hover:bg-[#f59e0b]/30 transition-all duration-200"
+                    className="anomaly-investigate-btn"
+                    onClick={() => onSendMessage && onSendMessage(`Show me suspicious values in the '${a.column}' column`)}
                   >
-                    🔍 Investigate {a.column}
+                    Investigate {a.column}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 2. Starter Questions — MIDDLE, 2 per row, bigger */}
+          {/* Starter questions */}
           {message.starterQuestions && message.starterQuestions.length > 0 && (
-            <div className="mt-3 rounded-xl border border-[#8b5cf6]/25 bg-[#8b5cf6]/6 p-4 text-left">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">💡</span>
-                <span className="text-[12px] font-bold text-[#a78bfa] uppercase tracking-wide">
-                  Try asking these to get started
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="info-card starter-card" style={{ textAlign: 'left', marginTop: 10 }}>
+              <div className="info-card-label">Suggested questions</div>
+              <div className="starter-questions-grid">
                 {message.starterQuestions.map((q, i) => (
                   <button
                     key={i}
+                    className="starter-question-btn"
                     onClick={() => onSendMessage && onSendMessage(q)}
-                    className="text-left px-4 py-3 rounded-xl text-[12px] font-medium text-[#c4b5fd] bg-[#8b5cf6]/10 border border-[#8b5cf6]/25 hover:bg-[#8b5cf6]/25 hover:border-[#8b5cf6]/50 transition-all duration-200 leading-snug"
                   >
-                    <span className="text-[#8b5cf6] mr-1.5">▶</span>{q}
+                    <ChevronRight size={11} style={{ flexShrink: 0, opacity: 0.5 }} />
+                    {q}
                   </button>
                 ))}
               </div>
@@ -83,205 +68,151 @@ export default function ChatMessage({ message, onSendMessage }) {
     );
   }
 
-  // User messages
+  /* ── User message ── */
   if (isUser) {
     return (
-      <div className="flex gap-3 justify-end mb-5">
+      <div className="msg-user">
         <div>
-          {message.type === 'file-upload' && message.fileData ? (
-            <div className="chat-bubble-user mb-2">
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet size={15} />
-                <span className="text-sm font-semibold">{message.content}</span>
-              </div>
+          {message.type === 'file-upload' ? (
+            <div className="msg-user-bubble" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <FileSpreadsheet size={14} />
+              <span style={{ fontSize: 13 }}>{message.content}</span>
             </div>
           ) : (
-            <div className="chat-bubble-user">
-              <p className="text-sm leading-relaxed">{message.content}</p>
-            </div>
+            <div className="msg-user-bubble">{message.content}</div>
           )}
-          {timeStr && <p className="text-[10px] text-[#4a4a6a] text-right mt-1">{timeStr}</p>}
-        </div>
-        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#5b21b6] to-[#7c3aed] flex items-center justify-center mt-1 shadow-lg shadow-[#5b21b6]/25">
-          <User size={15} className="text-white" />
+          {timeStr && <div className="msg-user-meta">{timeStr}</div>}
         </div>
       </div>
     );
   }
 
-  // ──── AI / Assistant messages ────
-  const agentLabel = message.agent_used || message.fnName || 'DataTalk AI';
-  const hasCode = message.sql_query || message.python_code;
-  const hasChart = message.chart || message.matplotlib_image;
-  const hasConfidence = message.confidence;
-  const hasSources = message.sources && message.sources.length > 0;
+  /* ── AI / assistant message ── */
+  const AGENT_MAP = {
+    sql_agent:    { label: 'SQL Agent',   cls: 'sql'     },
+    code_agent:   { label: 'Code Agent',  cls: 'code'    },
+    search_agent: { label: 'Web Search',  cls: 'search'  },
+    general:      { label: 'DataTalk',    cls: 'general' },
+  };
+  const agentInfo  = AGENT_MAP[message.agent_used] || { label: 'DataTalk', cls: 'general' };
+  const hasChart   = message.chart || message.matplotlib_image;
 
   return (
-    <div className="flex gap-3 justify-start mb-5">
-      {/* Bot Avatar */}
-      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#5b21b6]/25 to-[#2dd4bf]/15 border border-[#5b21b6]/20 flex items-center justify-center mt-1">
-        <Bot size={15} className="text-[#a78bfa]" />
+    <div className="msg-ai">
+      <div className="msg-ai-avatar">
+        <Database size={13} />
       </div>
 
-      <div className="max-w-[82%] min-w-0">
-        {/* File upload data summary */}
+      <div className="msg-ai-body">
+        <div className="msg-ai-header">
+          <span className="msg-ai-name">DataTalk</span>
+          {!isError && message.agent_used && (
+            <span className={`agent-badge ${agentInfo.cls}`}>{agentInfo.label}</span>
+          )}
+          {timeStr && <span className="msg-ai-time" style={{ marginLeft: isError ? 'auto' : undefined }}>{timeStr}</span>}
+          {isError && <AlertCircle size={12} style={{ color: 'var(--error)', marginLeft: 'auto' }} />}
+        </div>
+
+        {/* File upload summary */}
         {message.type === 'file-upload' && message.fileData && (
-          <div className="chat-bubble-bot mb-3">
+          <div style={{ marginBottom: 10 }}>
             <DataSummary data={message.fileData} />
           </div>
         )}
 
-        {/* Function-call styled response block */}
-        <div className={`fn-call-block anim-scale-in ${isError ? '!border-[#ef4444]/30' : ''}`}>
-          {/* Header: agent + function name */}
-          <div className={`fn-call-header ${isError ? '!bg-[#ef4444]/8 !text-[#ef4444]' : ''}`}>
-            {isError ? <AlertCircle size={13} /> : <Terminal size={13} />}
-            <span>{isError ? 'error' : agentLabel}()</span>
-            {timeStr && (
-              <span className="ml-auto flex items-center gap-1 text-[10px] text-[#6a6a8a] font-normal">
-                <Clock size={9} />
-                {timeStr}
-              </span>
-            )}
-          </div>
-
-          {/* Function args (if present) */}
-          {message.fnArgs && (
-            <div className="fn-call-body">
-              <pre className="whitespace-pre-wrap text-[#8a8aaa]">{message.fnArgs}</pre>
-            </div>
-          )}
-
-          {/* Result section */}
-          <div className={`fn-call-result ${isError ? '!bg-[#ef4444]/4' : ''}`}>
-            <div className={`result-label ${isError ? '!text-[#ef4444]' : ''}`}>
-              {isError ? <AlertCircle size={12} /> : <CheckCircle2 size={12} />}
-              {isError ? 'Error' : 'Result'}
-            </div>
-
-            {/* Main text answer */}
-            <div className="prose prose-sm prose-invert max-w-none">
-              <MarkdownContent content={message.content} />
-            </div>
-
-            {/* Raw data table (shown when summary is blocked for sensitive data) */}
-            {message.data && message.data.length > 0 && (
-              <DataTable data={message.data} />
-            )}
-
-            {/* SQL Query (collapsible) */}
-            {message.sql_query && (
-              <CodeBlock code={message.sql_query} language="sql" title="SQL Query" />
-            )}
-
-            {/* Chart */}
-            {hasChart && (
-              <ChartRenderer
-                chart={message.chart}
-                matplotlib_image={message.matplotlib_image}
-                onExplain={message.matplotlib_image && onSendMessage
-                  ? () => onSendMessage('Explain this figure in detail — describe the key patterns, trends, and insights visible in the chart.')
-                  : undefined}
-              />
-            )}
-
-            {/* Confidence Score */}
-            {hasConfidence && (
-              <ConfidenceScore confidence={message.confidence} />
-            )}
-
-            {/* Sources */}
-            {hasSources && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-[#64748b] mr-1">📎 Sources:</span>
-                {message.sources.map((src, i) => {
-                  if (typeof src === 'object' && src.url) {
-                    return (
-                      <a
-                        key={i}
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[rgba(59,130,246,0.1)] text-[#60a5fa] border border-[rgba(59,130,246,0.15)] hover:bg-[rgba(59,130,246,0.2)]"
-                        title={src.snippet}
-                      >
-                        🌐 {src.title || src.name || `Web Source ${i + 1}`}
-                      </a>
-                    );
-                  }
-                  return (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[rgba(139,92,246,0.1)] text-[#a78bfa] border border-[rgba(139,92,246,0.15)]"
-                    >
-                      {typeof src === 'string' ? src : src.name || src.column || `Source ${i + 1}`}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Follow-up suggestions — clicking auto-submits the question */}
-            {message.suggestions && message.suggestions.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-[rgba(255,255,255,0.05)]">
-                <p className="text-[10px] font-semibold text-[#64748b] mb-2">💡 You might also ask:</p>
-                <div className="flex flex-wrap gap-2">
-                  {message.suggestions.map((s, i) => (
-                    <button
-                      key={i}
-                      onClick={() => onSendMessage && onSendMessage(s)}
-                      className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-[#8b5cf6]/8 text-[#a78bfa] border border-[#8b5cf6]/20 hover:bg-[#8b5cf6]/20 hover:border-[#8b5cf6]/40 transition-all duration-200 text-left"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Main content */}
+        <div className={`msg-ai-content${isError ? ' is-error' : ''}`}>
+          <MarkdownContent content={message.content} />
         </div>
+
+        {/* Data table */}
+        {message.data && message.data.length > 0 && (
+          <DataTable data={message.data} />
+        )}
+
+        {/* SQL */}
+        {message.sql_query && (
+          <SQLBlock code={message.sql_query} />
+        )}
+
+        {/* Chart */}
+        {hasChart && (
+          <ChartRenderer
+            chart={message.chart}
+            matplotlib_image={message.matplotlib_image}
+            onExplain={message.matplotlib_image && onSendMessage
+              ? () => onSendMessage('Explain this chart — describe the key patterns, trends, and insights.')
+              : undefined}
+          />
+        )}
+
+        {/* Confidence */}
+        {message.confidence && (
+          <ConfidenceScore confidence={message.confidence} />
+        )}
+
+        {/* Sources */}
+        {message.sources && message.sources.length > 0 && (
+          <div className="sources-row">
+            <span className="source-label">Sources</span>
+            {message.sources.map((src, i) => {
+              if (typeof src === 'object' && src.url) {
+                return (
+                  <a key={i} href={src.url} target="_blank" rel="noopener noreferrer" className="source-pill" title={src.snippet}>
+                    {src.title || src.name || `Source ${i + 1}`}
+                  </a>
+                );
+              }
+              return (
+                <span key={i} className="source-pill">
+                  {typeof src === 'string' ? src : src.name || src.column || `Source ${i + 1}`}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Follow-up suggestions */}
+        {message.suggestions && message.suggestions.length > 0 && (
+          <div className="suggestion-strip" style={{ marginTop: 10 }}>
+            {message.suggestions.map((s, i) => (
+              <button key={i} className="suggestion-chip" onClick={() => onSendMessage && onSendMessage(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ──── Shared Markdown Renderer ──── */
+/* ── Markdown renderer ── */
 function MarkdownContent({ content }) {
   return (
     <ReactMarkdown
       components={{
-        p: ({ children }) => (
-          <p className="text-[13px] leading-relaxed mb-2 last:mb-0 text-[#ddd] font-[Inter,sans-serif]">{children}</p>
-        ),
-        strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
-        em: ({ children }) => <em className="text-[#a0a0c0] italic">{children}</em>,
+        p:      ({ children }) => <p>{children}</p>,
+        strong: ({ children }) => <strong>{children}</strong>,
+        em:     ({ children }) => <em>{children}</em>,
+        ul:     ({ children }) => <ul>{children}</ul>,
+        ol:     ({ children }) => <ol>{children}</ol>,
+        li:     ({ children }) => <li>{children}</li>,
         code: ({ children, className }) => {
-          if (!className) {
+          if (className) {
             return (
-              <code className="px-1.5 py-0.5 rounded bg-[#2a2a4a]/60 text-[#a78bfa] text-[11px] font-mono">
-                {children}
-              </code>
+              <pre><code>{children}</code></pre>
             );
           }
-          return (
-            <pre className="bg-[#0f0f1e] rounded-lg p-3 overflow-x-auto my-2 border border-[#2a2a4a]/50">
-              <code className="text-[11px] text-[#c8c8e0] font-mono">{children}</code>
-            </pre>
-          );
+          return <code>{children}</code>;
         },
-        ul: ({ children }) => (
-          <ul className="list-disc list-inside space-y-1 my-2 text-[13px] text-[#c8c8e0]">{children}</ul>
-        ),
-        ol: ({ children }) => (
-          <ol className="list-decimal list-inside space-y-1 my-2 text-[13px] text-[#c8c8e0]">{children}</ol>
-        ),
         table: ({ children }) => (
-          <div className="overflow-x-auto my-2 rounded-lg border border-[#2a2a4a]/50">
+          <div className="data-table-wrap" style={{ marginTop: 8 }}>
             <table className="data-table">{children}</table>
           </div>
         ),
-        th: ({ children }) => <th className="!bg-[#1a1a2e] !text-[#a0a0c0]">{children}</th>,
-        td: ({ children }) => <td className="!text-[#c8c8e0]">{children}</td>,
+        th: ({ children }) => <th>{children}</th>,
+        td: ({ children }) => <td>{children}</td>,
       }}
     >
       {content}
@@ -289,29 +220,48 @@ function MarkdownContent({ content }) {
   );
 }
 
-/* ──── Raw Data Table ──── */
+/* ── SQL block ── */
+function SQLBlock({ code }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  };
+  return (
+    <div className="code-block" style={{ marginTop: 10 }}>
+      <div className="code-block-header">
+        <span>SQL</span>
+        <button className="code-block-copy" onClick={copy}>
+          {copied ? <Check size={11} /> : <Copy size={11} />}
+          {copied ? ' Copied' : ' Copy'}
+        </button>
+      </div>
+      <pre className="code-block-body"><code>{code}</code></pre>
+    </div>
+  );
+}
+
+/* ── Raw data table ── */
 function DataTable({ data }) {
   if (!data || data.length === 0) return null;
   const headers = Object.keys(data[0]);
   return (
-    <div className="mt-3 overflow-x-auto rounded-lg border border-[#2a2a4a]/50">
-      <table className="w-full text-[11px] border-collapse">
+    <div className="data-table-wrap" style={{ marginTop: 10, maxHeight: 280, overflowY: 'auto' }}>
+      <table className="data-table">
         <thead>
-          <tr className="bg-[#1a1a2e]">
-            {headers.map(h => (
-              <th key={h} className="px-3 py-2 text-left text-[#a0a0c0] font-semibold border-b border-[#2a2a4a]/50 whitespace-nowrap">
-                {h}
-              </th>
-            ))}
+          <tr>
+            {headers.map(h => <th key={h}>{h}</th>)}
           </tr>
         </thead>
         <tbody>
           {data.slice(0, 100).map((row, i) => (
-            <tr key={i} className={i % 2 === 0 ? 'bg-[#0f0f1e]/60' : 'bg-[#16162a]/40'}>
+            <tr key={i}>
               {headers.map(h => (
-                <td key={h} className="px-3 py-1.5 text-[#c8c8e0] border-b border-[#2a2a4a]/30 whitespace-nowrap">
+                <td key={h}>
                   {row[h] === null || row[h] === undefined
-                    ? <span className="text-[#4a4a6a] italic">null</span>
+                    ? <span style={{ color: 'var(--text-xmuted)', fontStyle: 'italic' }}>null</span>
                     : String(row[h])}
                 </td>
               ))}
@@ -320,9 +270,9 @@ function DataTable({ data }) {
         </tbody>
       </table>
       {data.length > 100 && (
-        <p className="text-[10px] text-[#6a6a8a] text-center py-1.5 border-t border-[#2a2a4a]/30">
+        <div style={{ padding: '6px 12px', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
           Showing 100 of {data.length} rows
-        </p>
+        </div>
       )}
     </div>
   );
