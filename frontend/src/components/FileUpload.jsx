@@ -4,119 +4,100 @@ import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader2 } from 'l
 import { parseFile, formatFileSize } from '../utils/csvParser';
 
 export default function FileUpload({ onFileLoaded, disabled }) {
-  const [parsing, setParsing] = useState(false);
-  const [error, setError] = useState(null);
+  const [parsing,    setParsing]   = useState(false);
+  const [error,      setError]     = useState(null);
   const [loadedFile, setLoadedFile] = useState(null);
 
-  const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
+  const onDrop = useCallback(async (accepted, rejected) => {
     setError(null);
-    if (rejectedFiles.length > 0) {
-      setError('Invalid file type. Please upload a CSV, TSV, or JSON file.');
-      return;
-    }
-    if (acceptedFiles.length === 0) return;
-
-    const file = acceptedFiles[0];
-    onFileLoaded(file);
+    if (rejected.length > 0) { setError('Invalid file type. Please upload a CSV, TSV, or JSON file.'); return; }
+    if (accepted.length === 0) return;
+    onFileLoaded(accepted[0]);
   }, [onFileLoaded]);
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
-      'text/csv': ['.csv'],
-      'text/tab-separated-values': ['.tsv'],
-      'application/json': ['.json'],
-      'text/plain': ['.txt'],
+      'text/csv':                   ['.csv'],
+      'text/tab-separated-values':  ['.tsv'],
+      'application/json':           ['.json'],
+      'text/plain':                 ['.txt'],
     },
     multiple: false,
     disabled: disabled || parsing,
   });
 
-  const clearFile = (e) => {
-    e.stopPropagation();
-    setLoadedFile(null);
-    setError(null);
-  };
-
   if (loadedFile) {
     return (
-      <div className="anim-scale-in">
-        <div className="dropzone has-file relative flex items-center gap-4 !p-5 cursor-default">
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#2dd4bf]/10 border border-[#2dd4bf]/20 flex items-center justify-center">
-            <CheckCircle size={22} className="text-[#2dd4bf]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <FileSpreadsheet size={15} className="text-[#2dd4bf] flex-shrink-0" />
-              <span className="font-semibold text-sm text-white truncate">{loadedFile.name}</span>
-            </div>
-            <p className="text-xs text-[#a0a0c0] mt-1">
-              {formatFileSize(loadedFile.size)} · {loadedFile.rowCount.toLocaleString()} rows · {loadedFile.colCount} columns
-            </p>
-          </div>
-          <button
-            onClick={clearFile}
-            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-[#2a2a4a]/60 transition-colors text-[#6a6a8a] hover:text-white"
-            title="Remove file"
-          >
-            <X size={15} />
-          </button>
+      <div className="dropzone has-file" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', cursor: 'default' }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <CheckCircle size={20} style={{ color: 'var(--success)' }} />
         </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <FileSpreadsheet size={13} style={{ color: 'var(--success)', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loadedFile.name}</span>
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {formatFileSize(loadedFile.size)} · {loadedFile.rowCount?.toLocaleString()} rows · {loadedFile.colCount} columns
+          </p>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); setLoadedFile(null); setError(null); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4, borderRadius: 6 }}
+        >
+          <X size={14} />
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="anim-fade-up">
+    <div>
       <div
         {...getRootProps()}
-        className={`dropzone group ${isDragActive ? 'active' : ''} ${isDragReject ? '!border-red-500 !bg-red-500/5' : ''}`}
+        className={`dropzone${isDragActive ? ' active' : ''}${isDragReject ? ' rejected' : ''}`}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center text-center">
-          {parsing ? (
-            <>
-              <div className="w-14 h-14 rounded-2xl bg-[#5b21b6]/12 border border-[#5b21b6]/20 flex items-center justify-center mb-4">
-                <Loader2 size={26} className="text-[#a78bfa] animate-spin" />
-              </div>
-              <p className="text-sm font-semibold text-white">Parsing your data...</p>
-              <p className="text-xs text-[#6a6a8a] mt-1">Analyzing schema and generating summaries</p>
-            </>
-          ) : isDragActive ? (
-            <>
-              <div className="w-14 h-14 rounded-2xl bg-[#5b21b6]/15 border border-[#5b21b6]/30 flex items-center justify-center mb-4 anim-scale-in">
-                <FileSpreadsheet size={26} className="text-[#a78bfa]" />
-              </div>
-              <p className="text-sm font-semibold text-[#a78bfa]">Drop your file here!</p>
-              <p className="text-xs text-[#7c3aed]/60 mt-1">We'll analyze it instantly</p>
-            </>
-          ) : (
-            <>
-              <div className="w-14 h-14 rounded-2xl bg-[#2a2a4a]/40 border border-[#3a3a5a]/30 flex items-center justify-center mb-4 group-hover:bg-[#5b21b6]/10 group-hover:border-[#5b21b6]/20 transition-all duration-300">
-                <Upload size={24} className="text-[#6a6a8a] group-hover:text-[#a78bfa] transition-colors duration-300 group-hover:-translate-y-1 transform" />
-              </div>
-              <p className="text-sm font-semibold text-white group-hover:text-white transition-colors">
-                Drag & drop your dataset
-              </p>
-              <p className="text-xs text-[#6a6a8a] mt-1">
-                or <span className="text-[#a78bfa] font-medium underline decoration-[#5b21b6]/30 underline-offset-2 cursor-pointer">browse files</span>
-              </p>
-              <div className="flex items-center gap-2 mt-4">
-                {['.CSV', '.TSV', '.JSON'].map(ext => (
-                  <span key={ext} className="px-3 py-1 rounded-full text-[10px] font-semibold bg-[#2a2a4a]/50 text-[#6a6a8a] border border-[#3a3a5a]/30">
-                    {ext}
-                  </span>
-                ))}
-              </div>
-            </>
-          )}
+
+        <div className="dropzone-icon">
+          {parsing
+            ? <Loader2 size={22} style={{ animation: 'spinSlow 1s linear infinite' }} />
+            : isDragActive
+              ? <FileSpreadsheet size={22} style={{ color: 'var(--accent)' }} />
+              : <Upload size={20} />
+          }
         </div>
+
+        {parsing ? (
+          <>
+            <div className="dropzone-title">Parsing your data...</div>
+            <div className="dropzone-sub">Analyzing schema and generating insights</div>
+          </>
+        ) : isDragActive ? (
+          <>
+            <div className="dropzone-title" style={{ color: 'var(--accent)' }}>Drop to upload</div>
+            <div className="dropzone-sub">We'll analyze it instantly</div>
+          </>
+        ) : (
+          <>
+            <div className="dropzone-title">Drag and drop your dataset</div>
+            <div className="dropzone-sub">
+              or <span style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 500 }}>browse files</span>
+            </div>
+            <div className="dropzone-formats">
+              {['.CSV', '.TSV', '.JSON'].map(ext => (
+                <span key={ext} className="dropzone-format-tag">{ext}</span>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {error && (
-        <div className="mt-3 flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/8 border border-red-500/20 anim-fade-in">
-          <AlertCircle size={15} className="text-red-400 flex-shrink-0" />
-          <span className="text-xs text-red-300">{error}</span>
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 7, padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(220,38,38,0.2)' }}>
+          <AlertCircle size={14} style={{ color: 'var(--error)', flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: 'var(--error)' }}>{error}</span>
         </div>
       )}
     </div>

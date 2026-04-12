@@ -1,226 +1,207 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Database, Sparkles, FileSpreadsheet, Download, Lock, Layers, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Database, FileSpreadsheet, Download, Lock, Layers, Edit3, BarChart2, ShieldAlert } from 'lucide-react';
 import SemanticLayerEditor from './SemanticLayerEditor';
 
-export default function Sidebar({ isOpen, fileData, onNewChat, onClearDataset, onExportPDF, semanticLayer, onUpdateSemanticLayer, sessionId, schema, dataQuality, sensitiveColumns = [], onUpdateSensitiveColumns }) {
+export default function Sidebar({
+  isOpen, fileData, onNewChat, onClearDataset, onExportPDF,
+  semanticLayer, onUpdateSemanticLayer, sessionId,
+  schema, dataQuality, sensitiveColumns = [], onUpdateSensitiveColumns,
+}) {
   const [showEditor, setShowEditor] = useState(false);
-
-  const handleSaveSemanticLayer = async (metrics) => {
-    if (onUpdateSemanticLayer) onUpdateSemanticLayer(metrics);
-    // In backend mode: await api.saveSemanticLayer(sessionId, metrics);
-  };
 
   return (
     <>
-      <aside
-        className={`flex-shrink-0 glass-strong border-r border-[#2a2a4a]/40 flex flex-col transition-all duration-300 ease-in-out ${
-          isOpen ? 'w-[260px]' : 'w-0 overflow-hidden'
-        }`}
-      >
-        {/* ── Header ── */}
-        <div className="p-4 border-b border-[#2a2a4a]/40">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5b21b6]/25 to-[#2dd4bf]/15 border border-[#5b21b6]/20 flex items-center justify-center">
-              <Sparkles size={17} className="text-[#a78bfa]" />
+      <aside className="sidebar" style={{ width: isOpen ? 252 : 0 }}>
+        {/* Header */}
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <div className="sidebar-brand-icon">
+              <BarChart2 size={15} />
             </div>
             <div>
-              <h1 className="text-sm font-bold gradient-text">DataTalk</h1>
-              <p className="text-[10px] text-[#6a6a8a]">AI Data Analyst</p>
+              <div className="sidebar-brand-name">DataTalk</div>
+              <div className="sidebar-brand-sub">AI Data Analyst</div>
             </div>
           </div>
-          <button
-            onClick={onNewChat}
-            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5b21b6]/10 border border-[#5b21b6]/20 text-[#a78bfa] text-xs font-semibold hover:bg-[#5b21b6]/18 hover:border-[#5b21b6]/30 transition-all duration-200"
-          >
-            <Plus size={15} />
-            New Chat
+          <button className="sidebar-new-chat" onClick={onNewChat}>
+            <Plus size={13} />
+            New chat
           </button>
         </div>
 
-        {/* ── Content ── */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {/* Body */}
+        <div className="sidebar-body">
           {fileData ? (
             <>
-              {/* File Info */}
-              <div className="anim-fade-in">
-                <p className="text-[10px] font-bold text-[#6a6a8a] uppercase tracking-wider mb-2">Active Dataset</p>
-                <div className="rounded-xl bg-[#16162a]/60 border border-[#2a2a4a]/30 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Database size={13} className="text-[#2dd4bf]" />
-                    <span className="text-xs font-semibold text-white truncate">{fileData.name || fileData.fileName}</span>
+              {/* Dataset info */}
+              <div>
+                <div className="sidebar-section-label">Active Dataset</div>
+                <div className="sidebar-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <Database size={12} style={{ color: 'var(--sidebar-accent)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--sidebar-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {fileData.name || fileData.fileName}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                    <div className="bg-[#0f0f1e]/60 rounded-lg px-2 py-1.5 text-center">
-                      <p className="text-[#6a6a8a]">Rows</p>
-                      <p className="text-white font-bold">{((fileData.rows || fileData.rowCount) || 0).toLocaleString()}</p>
-                    </div>
-                    <div className="bg-[#0f0f1e]/60 rounded-lg px-2 py-1.5 text-center">
-                      <p className="text-[#6a6a8a]">Cols</p>
-                      <p className="text-white font-bold">{fileData.columns || fileData.colCount || 0}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {(schema || []).map(c => c.name).slice(0, 5).map(h => (
-                      <span key={h} className="px-1.5 py-0.5 rounded text-[9px] bg-[#2a2a4a]/40 text-[#6a6a8a] truncate max-w-[80px]">{h}</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    {[
+                      { label: 'Rows', val: ((fileData.rows || fileData.rowCount) || 0).toLocaleString() },
+                      { label: 'Cols', val: fileData.columns || fileData.colCount || 0 },
+                    ].map(({ label, val }) => (
+                      <div key={label} style={{ textAlign: 'center', padding: '5px 0', borderRadius: 6, background: 'rgba(255,255,255,0.04)' }}>
+                        <div style={{ fontSize: 9, color: 'var(--sidebar-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sidebar-text)', marginTop: 1 }}>{val}</div>
+                      </div>
                     ))}
-                    {(schema || []).length > 5 && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-[#2a2a4a]/40 text-[#5a5a7a]">+{schema.length - 5}</span>
-                    )}
                   </div>
+                  {(schema || []).length > 0 && (
+                    <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {(schema || []).slice(0, 5).map(c => (
+                        <span key={c.name} style={{ fontSize: 9, padding: '2px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'var(--sidebar-muted)', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.name}
+                        </span>
+                      ))}
+                      {(schema || []).length > 5 && (
+                        <span style={{ fontSize: 9, padding: '2px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'var(--sidebar-muted)' }}>
+                          +{schema.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="anim-fade-in" style={{ animationDelay: '0.05s' }}>
-                <p className="text-[10px] font-bold text-[#6a6a8a] uppercase tracking-wider mb-2">Data Quality</p>
-                <div className="rounded-xl bg-[#16162a]/60 border border-[#2a2a4a]/30 p-3">
+              {/* Data Quality */}
+              <div>
+                <div className="sidebar-section-label">Data Quality</div>
+                <div className="sidebar-card">
                   {(() => {
-                    const nullCount = (schema || []).filter(c => c.missing_pct > 0).length;
                     const score = dataQuality?.overall_score ?? 100;
-                    const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+                    const color = score >= 75 ? '#4ade80' : score >= 50 ? '#fbbf24' : '#f87171';
+                    const nullCount = (schema || []).filter(c => c.missing_pct > 0).length;
                     return (
                       <>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] text-[#a0a0c0]">Overall Score</span>
-                          <span className="text-[11px] font-bold" style={{ color }}>{score}%</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: 'var(--sidebar-muted)' }}>Overall score</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color }}>{score}%</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{ width: `${score}%`, backgroundColor: color }}
-                          />
+                        <div className="quality-bar-track">
+                          <div className="quality-bar-fill" style={{ width: `${score}%`, backgroundColor: color }} />
                         </div>
-                        {nullCount > 0 && (
-                          <p className="text-[10px] text-[#f59e0b] mt-2">⚠ {nullCount} column{nullCount > 1 ? 's' : ''} with missing values</p>
-                        )}
-                        {nullCount === 0 && (
-                          <p className="text-[10px] text-[#10b981] mt-2">✓ No missing values found</p>
-                        )}
+                        <p style={{ fontSize: 10, marginTop: 5, color: nullCount > 0 ? '#fbbf24' : '#4ade80' }}>
+                          {nullCount > 0 ? `${nullCount} column${nullCount > 1 ? 's' : ''} with missing values` : 'No missing values'}
+                        </p>
                       </>
                     );
                   })()}
                 </div>
               </div>
 
-              {/* Sensitive Columns */}
-              <div className="anim-fade-in" style={{ animationDelay: '0.07s' }}>
-                <p className="text-[10px] font-bold text-[#6a6a8a] uppercase tracking-wider mb-2">Sensitive Data</p>
-                <div className="rounded-xl bg-[#16162a]/60 border border-[#2a2a4a]/30 p-3 max-h-32 overflow-y-auto custom-scrollbar">
-                  <p className="text-[9px] text-[#6a6a8a] mb-2 leading-relaxed">
-                    Click to mark columns as sensitive.
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {(schema || []).map(c => {
-                      const isSensitive = sensitiveColumns.includes(c.name);
-                      return (
-                        <button
-                          key={c.name}
-                          onClick={() => {
-                            if (onUpdateSensitiveColumns) {
-                              onUpdateSensitiveColumns(
-                                isSensitive 
-                                  ? sensitiveColumns.filter(name => name !== c.name)
-                                  : [...sensitiveColumns, c.name]
-                              )
-                            }
-                          }}
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors ${
-                            isSensitive 
-                              ? 'bg-red-500/20 text-red-500 border border-red-500/30'
-                              : 'bg-[#2a2a4a]/40 text-[#6a6a8a] hover:bg-[#2a2a4a]/80 border border-transparent'
-                          }`}
-                        >
-                          {c.name}
-                        </button>
-                      );
-                    })}
+              {/* Sensitive columns */}
+              {(schema || []).length > 0 && (
+                <div>
+                  <div className="sidebar-section-label">Sensitive Columns</div>
+                  <div className="sidebar-card" style={{ maxHeight: 176, overflowY: 'auto' }}>
+                    <p style={{ fontSize: 10.5, color: 'var(--sidebar-muted)', marginBottom: 8, lineHeight: 1.5 }}>
+                      Click to mark private/PII columns — the AI will hide their values from answers.
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {(schema || []).map(c => {
+                        const isSensitive = sensitiveColumns.includes(c.name);
+                        return (
+                          <button
+                            key={c.name}
+                            className={`col-tag ${isSensitive ? 'sensitive' : 'normal'}`}
+                            onClick={() => onUpdateSensitiveColumns && onUpdateSensitiveColumns(
+                              isSensitive
+                                ? sensitiveColumns.filter(n => n !== c.name)
+                                : [...sensitiveColumns, c.name]
+                            )}
+                            title={isSensitive ? `${c.name} — marked as sensitive (click to unmark)` : `Click to mark '${c.name}' as sensitive`}
+                          >
+                            {isSensitive && <Lock size={9} style={{ flexShrink: 0 }} />}
+                            {c.name}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Semantic Layer */}
-              <div className="anim-fade-in" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-bold text-[#6a6a8a] uppercase tracking-wider">Semantic Layer</p>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div className="sidebar-section-label" style={{ marginBottom: 0 }}>Semantic Layer</div>
                   <button
                     onClick={() => setShowEditor(true)}
-                    className="flex items-center gap-1 text-[10px] text-[#a78bfa] hover:text-white transition-colors"
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--sidebar-accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    <Edit3 size={10} />
-                    Edit
+                    <Edit3 size={9} /> Edit
                   </button>
                 </div>
-                <div className="rounded-xl bg-[#16162a]/60 border border-[#2a2a4a]/30 p-3">
+                <div className="sidebar-card">
                   {semanticLayer && semanticLayer.length > 0 ? (
-                    <div className="space-y-1.5">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                       {semanticLayer.slice(0, 4).map((m, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Layers size={10} className="text-[#8b5cf6] flex-shrink-0" />
-                          <span className="text-[10px] text-white font-medium truncate">{m.name}</span>
-                          <span className="text-[9px] text-[#4a4a6a] ml-auto truncate max-w-[80px] font-mono">{m.expression}</span>
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Layers size={9} style={{ color: 'var(--sidebar-accent)', flexShrink: 0 }} />
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--sidebar-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
+                          <span style={{ fontSize: 9, color: 'var(--sidebar-muted)', marginLeft: 'auto', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 80 }}>{m.expression}</span>
                         </div>
                       ))}
                       {semanticLayer.length > 4 && (
-                        <p className="text-[9px] text-[#4a4a6a] text-center">+{semanticLayer.length - 4} more</p>
+                        <p style={{ fontSize: 9, color: 'var(--sidebar-muted)', textAlign: 'center' }}>+{semanticLayer.length - 4} more</p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-[#4a4a6a] text-center py-1">No metrics defined</p>
+                    <p style={{ fontSize: 10, color: 'var(--sidebar-muted)', textAlign: 'center', padding: '4px 0' }}>No metrics defined</p>
                   )}
                 </div>
               </div>
 
-              {/* Clear Dataset */}
+              {/* Clear */}
               <button
                 onClick={onClearDataset}
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[10px] text-red-400/60 hover:text-red-400 hover:bg-red-500/8 transition-all duration-200"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '7px 0', borderRadius: 7, background: 'none', border: 'none', fontSize: 11, color: 'rgba(248,113,113,0.5)', cursor: 'pointer', fontFamily: 'inherit', transition: 'color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(248,113,113,0.5)'}
               >
-                <Trash2 size={11} />
-                Clear Dataset
+                <Trash2 size={11} /> Clear dataset
               </button>
             </>
           ) : (
-            <div className="text-center py-8">
-              <FileSpreadsheet size={28} className="mx-auto text-[#3a3a5a] mb-3" />
-              <p className="text-[10px] text-[#5a5a7a]">No dataset loaded</p>
-              <p className="text-[9px] text-[#4a4a6a] mt-1">Upload a CSV to get started</p>
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <FileSpreadsheet size={28} style={{ color: 'var(--sidebar-muted)', margin: '0 auto 8px' }} />
+              <p style={{ fontSize: 11, color: 'var(--sidebar-muted)' }}>No dataset loaded</p>
+              <p style={{ fontSize: 10, color: '#3a3f52', marginTop: 3 }}>Upload a CSV to get started</p>
             </div>
           )}
 
-          {/* Privacy Badge */}
-          <div className="rounded-xl border border-[#10b981]/15 bg-[#10b981]/5 p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Lock size={12} className="text-[#10b981]" />
-              <span className="text-[10px] font-semibold text-[#10b981]">Privacy Secured</span>
+          {/* Privacy notice */}
+          <div style={{ borderRadius: 8, border: '1px solid rgba(74,222,128,0.12)', background: 'rgba(74,222,128,0.04)', padding: '9px 11px', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+              <Lock size={11} style={{ color: '#4ade80' }} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#4ade80' }}>Privacy secured</span>
             </div>
-            <p className="text-[9px] text-[#6a8a7a] leading-relaxed">
-              Your data never leaves this server. All processing is done locally.
-            </p>
+            <p style={{ fontSize: 9, color: '#3a5a44', lineHeight: 1.5 }}>Your data never leaves this server. All processing is local.</p>
           </div>
         </div>
 
-        {/* ── Bottom: Export PDF ── */}
-        <div className="p-4 border-t border-[#2a2a4a]/40">
-          <button
-            onClick={onExportPDF}
-            disabled={!fileData}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
-              fileData
-                ? 'btn-primary'
-                : 'bg-[#2a2a4a]/30 text-[#4a4a6a] cursor-not-allowed'
-            }`}
-          >
-            <Download size={14} />
+        {/* Footer */}
+        <div className="sidebar-footer">
+          <button className="sidebar-export-btn" onClick={onExportPDF} disabled={!fileData}>
+            <Download size={13} />
             Export PDF Report
           </button>
         </div>
       </aside>
 
-      {/* Semantic Layer Editor Modal */}
       <SemanticLayerEditor
         isOpen={showEditor}
         onClose={() => setShowEditor(false)}
         semanticLayer={semanticLayer || []}
-        onSave={handleSaveSemanticLayer}
+        onSave={(metrics) => { onUpdateSemanticLayer && onUpdateSemanticLayer(metrics); }}
         sessionId={sessionId}
       />
     </>

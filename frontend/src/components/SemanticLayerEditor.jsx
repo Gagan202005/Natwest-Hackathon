@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
-import { X, Plus, Trash2, Save, Sparkles, Layers, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, Save, Layers, AlertCircle, Check, Info } from 'lucide-react';
 
-export default function SemanticLayerEditor({ isOpen, onClose, semanticLayer, onSave, sessionId }) {
-  const [metrics, setMetrics] = useState(semanticLayer || []);
-  const [newMetric, setNewMetric] = useState({ name: '', expression: '', description: '' });
+const SUGGESTED = [
+  { name: 'Total Revenue',       expression: 'SUM(revenue)',                           description: 'Sum of all revenue values' },
+  { name: 'Average Order Value', expression: 'AVG(order_amount)',                       description: 'Mean order amount' },
+  { name: 'Customer Count',      expression: 'COUNT(DISTINCT customer_id)',              description: 'Unique customer count' },
+  { name: 'Conversion Rate',     expression: 'COUNT(purchases) / COUNT(visits) * 100',  description: 'Purchase to visit ratio' },
+];
+
+export default function SemanticLayerEditor({ isOpen, onClose, semanticLayer, onSave }) {
+  const [metrics,     setMetrics]     = useState(semanticLayer || []);
+  const [newMetric,   setNewMetric]   = useState({ name: '', expression: '', description: '' });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState(null);
+  const [showInfo,    setShowInfo]    = useState(false);
+
+  useEffect(() => { if (isOpen) setMetrics(semanticLayer || []); }, [isOpen, semanticLayer]);
 
   if (!isOpen) return null;
 
-  const suggestedMetrics = [
-    { name: 'Total Revenue', expression: 'SUM(revenue)', description: 'Sum of all revenue values' },
-    { name: 'Average Order Value', expression: 'AVG(order_amount)', description: 'Mean order amount' },
-    { name: 'Customer Count', expression: 'COUNT(DISTINCT customer_id)', description: 'Unique customer count' },
-    { name: 'Conversion Rate', expression: 'COUNT(purchases) / COUNT(visits) * 100', description: 'Purchase to visit ratio' },
-  ];
+  const handleQuickAdd = (sm) => {
+    if (metrics.some(m => m.name === sm.name)) return;
+    setMetrics(prev => [...prev, { ...sm, id: Date.now() }]);
+  };
 
   const handleAddMetric = () => {
     if (!newMetric.name.trim() || !newMetric.expression.trim()) return;
@@ -24,13 +32,8 @@ export default function SemanticLayerEditor({ isOpen, onClose, semanticLayer, on
     setShowAddForm(false);
   };
 
-  const handleQuickAdd = (metric) => {
-    if (metrics.some(m => m.name === metric.name)) return;
-    setMetrics(prev => [...prev, { ...metric, id: Date.now() }]);
-  };
-
-  const handleDelete = (id) => {
-    setMetrics(prev => prev.filter(m => m.id !== id));
+  const handleDelete = (key) => {
+    setMetrics(prev => prev.filter(m => (m.id || m.name) !== key));
   };
 
   const handleSave = async () => {
@@ -39,181 +42,217 @@ export default function SemanticLayerEditor({ isOpen, onClose, semanticLayer, on
     try {
       if (onSave) await onSave(metrics);
       onClose();
-    } catch (err) {
-      setError('Failed to save semantic layer. Please try again.');
+    } catch {
+      setError('Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in-up">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      {/* Overlay — no blur */}
+      <div className="modal-overlay" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[80vh] glass-strong rounded-2xl overflow-hidden flex flex-col">
+      {/* Modal — solid white, no glassmorphism */}
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: 720, maxHeight: '88vh',
+        background: '#ffffff', border: '1px solid var(--border)',
+        borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        animation: 'fadeInUp 0.2s ease-out both',
+      }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(255,255,255,0.08)]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#8b5cf6]/15 border border-[#8b5cf6]/20 flex items-center justify-center">
-              <Layers size={16} className="text-[#8b5cf6]" />
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', background: '#fafaf9' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-light)', border: '1px solid rgba(79,70,229,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Layers size={18} style={{ color: 'var(--accent)' }} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Semantic Layer</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Define business metrics and expressions</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Semantic Layer</h2>
-              <p className="text-[11px] text-[#94a3b8]">Define business metrics and expressions</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => setShowInfo(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 7, border: 'none', background: showInfo ? 'var(--accent-light)' : 'transparent', color: showInfo ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer' }}
+                title="What is the Semantic Layer?"
+              >
+                <Info size={15} />
+              </button>
+              <button
+                onClick={onClose}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg text-[#64748b] hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-all"
-          >
-            <X size={18} />
-          </button>
+
+          {showInfo && (
+            <div style={{ marginTop: 14, padding: '12px 16px', borderRadius: 10, background: 'var(--accent-light)', border: '1px solid rgba(79,70,229,0.15)' }}>
+              <p style={{ fontSize: 13, color: '#3730a3', lineHeight: 1.65 }}>
+                <strong>What is the Semantic Layer?</strong><br />
+                Define reusable business metrics using SQL expressions — e.g.{' '}
+                <code style={{ background: 'rgba(79,70,229,0.1)', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>Total Revenue = SUM(amount)</code>.
+                Once defined, DataTalk will use these named metrics when answering your questions,
+                so you can ask <em>"What is our Total Revenue this month?"</em> and get accurate results
+                using your own business terminology instead of raw column names.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {/* Error */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {error && (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#ef4444]/8 border border-[#ef4444]/20">
-              <AlertCircle size={14} className="text-[#ef4444]" />
-              <span className="text-xs text-[#ef4444]">{error}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: '#fef2f2', border: '1px solid rgba(220,38,38,0.2)' }}>
+              <AlertCircle size={14} style={{ color: 'var(--error)', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: 'var(--error)' }}>{error}</span>
             </div>
           )}
 
-          {/* Quick Add Suggestions */}
+          {/* Quick add */}
           <div>
-            <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide mb-2">Quick Add Suggested Metrics</p>
-            <div className="flex flex-wrap gap-2">
-              {suggestedMetrics.map((sm, i) => {
-                const alreadyAdded = metrics.some(m => m.name === sm.name);
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 10 }}>Quick add suggested metrics</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {SUGGESTED.map((sm, i) => {
+                const added = metrics.some(m => m.name === sm.name);
                 return (
                   <button
                     key={i}
                     onClick={() => handleQuickAdd(sm)}
-                    disabled={alreadyAdded}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                      alreadyAdded
-                        ? 'bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20 cursor-default'
-                        : 'bg-[#8b5cf6]/8 text-[#a78bfa] border border-[#8b5cf6]/15 hover:bg-[#8b5cf6]/15 hover:border-[#8b5cf6]/30'
-                    }`}
+                    disabled={added}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '7px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 500,
+                      border: '1px solid', cursor: added ? 'default' : 'pointer', fontFamily: 'inherit',
+                      background: added ? '#f0fdf4' : 'var(--bg-subtle)',
+                      borderColor: added ? '#bbf7d0' : 'var(--border)',
+                      color: added ? 'var(--success)' : 'var(--text-secondary)',
+                      transition: 'all 0.15s',
+                    }}
                   >
-                    <Sparkles size={10} />
+                    {added ? <Check size={11} /> : <Plus size={11} />}
                     {sm.name}
-                    {alreadyAdded && ' ✓'}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Existing Metrics List */}
+          {/* Defined metrics */}
           <div>
-            <p className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide mb-2">
-              Defined Metrics ({metrics.length})
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 10 }}>
+              Defined metrics ({metrics.length})
             </p>
             {metrics.length === 0 ? (
-              <div className="text-center py-6 text-[#4a4a6a] text-xs">
-                No metrics defined yet. Add one below or use quick add.
+              <div style={{ padding: '28px 0', textAlign: 'center', color: 'var(--text-xmuted)', fontSize: 13 }}>
+                No metrics yet. Quick-add above or create a custom one below.
               </div>
             ) : (
-              <div className="space-y-2">
-                {metrics.map((metric) => (
-                  <div
-                    key={metric.id || metric.name}
-                    className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.1)] transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{metric.name}</p>
-                      <p className="text-xs text-[#8b5cf6] font-mono mt-0.5">{metric.expression}</p>
-                      {metric.description && (
-                        <p className="text-[11px] text-[#64748b] mt-1">{metric.description}</p>
-                      )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {metrics.map((m) => {
+                  const key = m.id || m.name;
+                  return (
+                    <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 16px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>{m.name}</p>
+                        <p style={{ fontSize: 12.5, fontFamily: 'monospace', color: 'var(--accent)', marginTop: 3 }}>{m.expression}</p>
+                        {m.description && (
+                          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{m.description}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDelete(key)}
+                        style={{ flexShrink: 0, padding: 6, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--text-xmuted)', cursor: 'pointer' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--error)'; e.currentTarget.style.background = '#fef2f2'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-xmuted)'; e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleDelete(metric.id || metric.name)}
-                      className="flex-shrink-0 p-1.5 rounded-lg text-[#4a4a6a] hover:text-[#ef4444] hover:bg-[#ef4444]/8 transition-all"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* Add New Metric Form */}
+          {/* Add form / add button */}
           {showAddForm ? (
-            <div className="rounded-xl bg-[rgba(255,255,255,0.03)] border border-[#8b5cf6]/15 p-4 space-y-3">
-              <p className="text-xs font-semibold text-[#a78bfa]">New Metric</p>
-              <input
-                type="text"
-                placeholder="Metric name (e.g., Total Revenue)"
-                value={newMetric.name}
-                onChange={e => setNewMetric(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[#0a0e1a] border border-[rgba(255,255,255,0.08)] text-sm text-white placeholder:text-[#4a4a6a] outline-none focus:border-[#8b5cf6]/40 transition-colors"
-              />
-              <input
-                type="text"
-                placeholder="Expression (e.g., SUM(amount))"
-                value={newMetric.expression}
-                onChange={e => setNewMetric(prev => ({ ...prev, expression: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[#0a0e1a] border border-[rgba(255,255,255,0.08)] text-sm text-white placeholder:text-[#4a4a6a] outline-none focus:border-[#8b5cf6]/40 transition-colors font-mono"
-              />
-              <input
-                type="text"
-                placeholder="Description (optional)"
-                value={newMetric.description}
-                onChange={e => setNewMetric(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-[#0a0e1a] border border-[rgba(255,255,255,0.08)] text-sm text-white placeholder:text-[#4a4a6a] outline-none focus:border-[#8b5cf6]/40 transition-colors"
-              />
-              <div className="flex gap-2 justify-end">
+            <div style={{ padding: 16, borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>New metric</p>
+              {[
+                { key: 'name',        ph: 'Metric name  (e.g. Total Revenue)',  mono: false },
+                { key: 'expression',  ph: 'SQL expression  (e.g. SUM(amount))', mono: true  },
+                { key: 'description', ph: 'Description (optional)',              mono: false },
+              ].map(({ key, ph, mono }) => (
+                <input
+                  key={key}
+                  type="text"
+                  placeholder={ph}
+                  value={newMetric[key]}
+                  onChange={e => setNewMetric(prev => ({ ...prev, [key]: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '10px 13px', borderRadius: 8, background: '#ffffff',
+                    border: '1px solid var(--border-strong)', fontSize: 13.5,
+                    color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box',
+                    fontFamily: mono ? '"JetBrains Mono", monospace' : 'inherit',
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(79,70,229,0.5)'}
+                  onBlur={e  => e.target.style.borderColor = 'var(--border-strong)'}
+                />
+              ))}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowAddForm(false); setNewMetric({ name: '', expression: '', description: '' }); }}
-                  className="px-4 py-2 rounded-lg text-xs text-[#94a3b8] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                  style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', fontSize: 12.5, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddMetric}
                   disabled={!newMetric.name.trim() || !newMetric.expression.trim()}
-                  className="btn-primary text-xs !py-2 !px-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!newMetric.name.trim() || !newMetric.expression.trim()) ? 0.4 : 1 }}
                 >
-                  Add Metric
+                  Add metric
                 </button>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-[rgba(255,255,255,0.1)] text-xs font-medium text-[#64748b] hover:text-[#a78bfa] hover:border-[#8b5cf6]/30 hover:bg-[#8b5cf6]/5 transition-all duration-200"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0', borderRadius: 10, border: '1.5px dashed var(--border-strong)', background: 'transparent', fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(79,70,229,0.4)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-light)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
             >
-              <Plus size={14} />
-              Add Custom Metric
+              <Plus size={15} /> Add custom metric
             </button>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[rgba(255,255,255,0.08)] flex items-center justify-between">
-          <span className="text-[10px] text-[#4a4a6a]">
+        <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', background: '#fafaf9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-xmuted)' }}>
             {metrics.length} metric{metrics.length !== 1 ? 's' : ''} defined
           </span>
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-[#94a3b8] hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+              style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', fontSize: 12.5, fontWeight: 500, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="btn-primary text-xs !py-2 !px-5 flex items-center gap-1.5"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
             >
               <Save size={13} />
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </div>
