@@ -1,8 +1,8 @@
-# DataTalk — Seamless Self-Service Intelligence
+# Multi Agent Conversational AI that Keeps your data safe and secure
 
-**NatWest Code for Purpose India Hackathon 2026 | Talk to Data**
+**NatWest Code for Purpose Hackathon 2026 | Talk to Data**
 
-DataTalk enables any user to ask questions about their data in plain English and receive clear, verifiable answers in seconds. No SQL, no dashboards, no data team required. Upload a dataset, ask a question, and get an answer backed by a source reference, a confidence score, and a chart where applicable.
+The system enables any user to ask questions about their data in plain English and receive clear, verifiable answers in seconds. No SQL, no dashboards, no data team required. Upload a dataset, ask a question, and get an answer backed by a source reference, a confidence score, and a chart where applicable.
 
 The system is built on three pillars from the NatWest problem statement: **Clarity** (answers non-experts can act on immediately), **Trust** (every response cites its data source and carries a reliability rating), and **Speed** (a multi-agent pipeline routes each question to the right tool automatically, with no manual steps required).
 
@@ -13,22 +13,22 @@ The system is built on three pillars from the NatWest problem statement: **Clari
 ### High-Level Design (HLD)
 ```mermaid
 graph LR
-    U([👤 User]) --> FE["React\nFrontend"]
+    U([ User]) --> FE["React\nFrontend"]
     FE -->|REST API| BE["FastAPI\nBackend"]
-    BE --> PP["🧹 Preprocessing\nWizard"]
-    PP --> O["🧠 Orchestrator\nAgent"]
+    BE --> PP["Preprocessing\nWizard"]
+    PP --> O[" Orchestrator\nAgent"]
 
     O --> SA["SQL Agent"]
     O --> CA["Code Agent"]
     O --> WA["Search Agent"]
     O --> EA["Explain Agent"]
 
-    SA & CA -->|"Schema Only\n⛔ No Raw Data"| LLM["☁️ Any LLM\nAPI"]
+    SA & CA -->|"Schema Only\n No Raw Data"| LLM[" Any LLM\nAPI"]
 
     SA -->|DuckDB SQL| DB[("DuckDB\nSession")]
-    CA --> SB["🔒 Python\nSandbox"]
+    CA --> SB["Python\nSandbox"]
     SB --> DB
-    WA --> WEB["🌐 Web"]
+    WA --> WEB[" Web"]
     DB -.->|One .duckdb\nper session| FS[("File\nSystem")]
 
     style LLM fill:#1e3a8a,color:#fff,stroke:#3b82f6
@@ -103,7 +103,7 @@ https://github.com/user-attachments/assets/936c42e9-4a5b-4fc3-8b03-3b8ef8cbb8db
 
 ## Data Preprocessing & Quality Wizard
 
-The Data Preprocessing Wizard is a seamless, user-in-the-loop data cleaning pipeline built into the file upload flow. It ensures that the AI agents and DuckDB analytics engine operate on highly structured, clean data — without accidentally mutating data the user wants to retain.
+The Data Preprocessing system is a simple, guided data-cleaning step that fits right into the upload process. It helps make sure your data is clean, well-structured, and ready for analysis, without changing anything you don’t want it to.
 
 ### Three-Phase Pipeline
 
@@ -314,9 +314,9 @@ Upload any structured dataset, then ask in plain English:
 
 ---
 
-## Architecture Notes
+## Architecture Notes & Decisions Explained
 
-DataTalk uses a multi-agent orchestration pattern. The Orchestrator classifies each incoming question into one of five intent categories and routes it to the appropriate specialist agent. Agents use the LLM only to translate intent into executable SQL or Python. Execution happens locally against the embedded analytical database, so the LLM acts as a translator, not a data processor.
+The application uses a multi-agent orchestration pattern. The Orchestrator classifies each incoming question into one of five intent categories and routes it to the appropriate specialist agent. Agents use the LLM only to translate intent into executable SQL or Python. Execution happens locally against the embedded analytical database, so the LLM acts as a translator, not a data processor.
 
 DuckDB was selected for its columnar storage model, embedded execution with zero server infrastructure, and native support for Pandas DataFrames. Each session writes to its own isolated database file, ensuring complete data separation between users.
 
