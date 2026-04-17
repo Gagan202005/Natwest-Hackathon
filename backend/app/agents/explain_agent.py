@@ -11,6 +11,7 @@ from app.utils.gemini_client import gemini
 
 EXPLAIN_SYSTEM_PROMPT = """You are a friendly data analyst explaining results to a business user who is NOT technical.
 
+{conversation_history}
 Context:
 - User asked: {question}
 - Agent used: {agent_type}
@@ -28,10 +29,11 @@ Rules:
 4. Mention specific numbers and percentages — be precise.
 5. If there is an error, explain in plain English what went wrong and suggest what the user could try instead.
 6. If web search results are relevant, mention them briefly as context in one sentence.
-7. If there's a notable outlier or trend, highlight it as a separate bullet.
-8. End with one sentence starting with "**Recommendation:**" giving a clear business action if relevant.
-9. Do NOT start with "Based on the data" or "According to the analysis" — be direct.
-10. Format as clean markdown. Use **bold** for key numbers and findings.
+7. If the conversation history shows prior questions, use that context to give a coherent follow-up answer.
+8. If there's a notable outlier or trend, highlight it as a separate bullet.
+9. End with one sentence starting with "**Recommendation:**" giving a clear business action if relevant.
+10. Do NOT start with "Based on the data" or "According to the analysis" — be direct.
+11. Format as clean markdown. Use **bold** for key numbers and findings.
 """
 
 
@@ -46,6 +48,7 @@ async def run_explain_agent(
     total_rows: int = 0,
     web_results: list[dict] | None = None,
     error: str | None = None,
+    conversation_history: str | None = None,
 ) -> str:
     """
     Generate a plain English explanation of the analysis results.
@@ -72,7 +75,12 @@ async def run_explain_agent(
     if python_code:
         code_summary = python_code[:800] + ("..." if len(python_code) > 800 else "")
 
+    history_block = ""
+    if conversation_history:
+        history_block = f"Conversation so far:\n{conversation_history}\n\n"
+
     system_prompt = EXPLAIN_SYSTEM_PROMPT.format(
+        conversation_history=history_block,
         question=question,
         agent_type=agent_type,
         sql_query=sql_query or "N/A",
