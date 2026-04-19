@@ -176,6 +176,9 @@ async def process_question(
         explanation_data = result.get("data", [])
         if result.get("stdout"):
             explanation_data = result["stdout"]
+        # For web-search answers the primary data IS the web results
+        if not explanation_data and web_results:
+            explanation_data = web_results
         try:
             answer = await run_explain_agent(
                 question=question,
