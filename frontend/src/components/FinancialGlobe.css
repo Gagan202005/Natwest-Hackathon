@@ -590,3 +590,120 @@
 }
 .fg-ticker-chg.up   { color: #22c55e; }
 .fg-ticker-chg.down { color: #ef4444; }
+
+/* ── Light mode overrides ─────────────────────────────── */
+[data-theme="light"] .fg-backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+[data-theme="light"] .fg-overlay {
+  background: #f8f9fb;
+  color: #1a1d2e;
+  border-color: #d4d8e8;
+}
+[data-theme="light"] .fg-header {
+  background: #ffffff;
+  border-bottom-color: #d4d8e8;
+}
+[data-theme="light"] .fg-date { color: #9ca3af; }
+[data-theme="light"] .fg-close {
+  border-color: #d4d8e8;
+  color: #6b7280;
+}
+[data-theme="light"] .fg-close:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #ef4444;
+}
+[data-theme="light"] .fg-left-panel {
+  background: #ffffff;
+  border-right-color: #d4d8e8;
+}
+[data-theme="light"] .fg-panel-header {
+  background: #f8f9fb;
+  border-bottom-color: #e5e7eb;
+  color: #9ca3af;
+}
+[data-theme="light"] .fg-filters {
+  border-bottom-color: #e5e7eb;
+}
+[data-theme="light"] .fg-filter-btn {
+  background: #f1f3f9;
+  border-color: #d4d8e8;
+  color: #6b7280;
+}
+[data-theme="light"] .fg-filter-btn:hover {
+  border-color: #9ca3af;
+  color: #1a1d2e;
+}
+[data-theme="light"] .fg-filter-btn.active {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+[data-theme="light"] .fg-news-list {
+  scrollbar-color: #d4d8e8 transparent;
+}
+[data-theme="light"] .fg-news-list::-webkit-scrollbar-thumb { background: #d4d8e8; }
+[data-theme="light"] .fg-news-item {
+  border-bottom-color: #f1f3f9;
+}
+[data-theme="light"] .fg-news-item:hover { background: #f5f6fa; }
+[data-theme="light"] .fg-news-item.selected { background: #eef0f6; }
+[data-theme="light"] .fg-news-headline { color: #1a1d2e; }
+[data-theme="light"] .fg-news-desc {
+  color: #6b7280;
+  border-top-color: #e5e7eb;
+}
+[data-theme="light"] .fg-news-time { color: #9ca3af; }
+[data-theme="light"] .fg-news-location { color: #b0b7c9; }
+[data-theme="light"] .fg-globe-area { background: #eef0f6; }
+[data-theme="light"] .fg-selected-card {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: #d4d8e8;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .fg-selected-headline { color: #1a1d2e; }
+[data-theme="light"] .fg-selected-desc { color: #6b7280; }
+[data-theme="light"] .fg-selected-meta {
+  color: #9ca3af;
+  border-top-color: #e5e7eb;
+}
+[data-theme="light"] .fg-selected-close { color: #9ca3af; }
+[data-theme="light"] .fg-selected-close:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+[data-theme="light"] .fg-legend {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #d4d8e8;
+}
+[data-theme="light"] .fg-legend-item { color: #6b7280; }
+[data-theme="light"] .fg-right-panel {
+  background: #ffffff;
+  border-left-color: #d4d8e8;
+  scrollbar-color: #d4d8e8 transparent;
+}
+[data-theme="light"] .fg-right-panel::-webkit-scrollbar-thumb { background: #d4d8e8; }
+[data-theme="light"] .fg-commodity-row {
+  border-bottom-color: #f1f3f9;
+}
+[data-theme="light"] .fg-commodity-row:hover { background: #f5f6fa; }
+[data-theme="light"] .fg-commodity-label { color: #6b7280; }
+[data-theme="light"] .fg-commodity-value { color: #1a1d2e; }
+[data-theme="light"] .fg-breakdown-bar-wrap { background: #e5e7eb; }
+[data-theme="light"] .fg-breakdown-label { color: #6b7280; }
+[data-theme="light"] .fg-breakdown-count { color: #9ca3af; }
+[data-theme="light"] .fg-cat-row {
+  border-bottom-color: #f1f3f9;
+}
+[data-theme="light"] .fg-cat-row:hover { background: #f5f6fa; }
+[data-theme="light"] .fg-cat-row.active { background: #eef0f6; }
+[data-theme="light"] .fg-cat-name { color: #6b7280; }
+[data-theme="light"] .fg-cat-count { color: #9ca3af; }
+[data-theme="light"] .fg-ticker-wrap {
+  background: #ffffff;
+  border-top-color: #d4d8e8;
+}
+[data-theme="light"] .fg-ticker-item { border-right-color: #e5e7eb; }
+[data-theme="light"] .fg-ticker-name { color: #9ca3af; }
+[data-theme="light"] .fg-ticker-val { color: #1a1d2e; }
