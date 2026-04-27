@@ -1,5 +1,6 @@
 import React from 'react';
-import { PanelLeftClose, PanelLeft, BarChart2, Download, FlaskConical, ShieldCheck, ShieldAlert, Globe, Shield } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, BarChart2, Download, FlaskConical, ShieldCheck, ShieldAlert, Globe, Shield, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function TopBar({
   sidebarOpen,
@@ -12,6 +13,7 @@ export default function TopBar({
   onOpenCompliance,
   complianceStatus,
 }) {
+  const { theme, toggleTheme } = useTheme();
   const tableNames   = Object.keys(tables);
   const hasData      = tableNames.length > 0;
   const firstName    = hasData ? Object.values(tables)[0].filename : null;
@@ -92,6 +94,15 @@ export default function TopBar({
       >
         <FlaskConical size={14} />
         <span>Secure Model Lab</span>
+      </button>
+
+      {/* Theme toggle */}
+      <button
+        className="topbar-btn"
+        onClick={toggleTheme}
+        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
       </button>
 
       {/* Export PDF */}
