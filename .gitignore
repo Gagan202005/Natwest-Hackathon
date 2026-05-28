@@ -28,6 +28,9 @@ backend/uploads/
 .vscode/
 .idea/
 
+# Claude AI session memory
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
