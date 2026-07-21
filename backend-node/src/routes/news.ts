@@ -29,7 +29,7 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'Central Bank': ['fed','rbi','ecb','central bank','monetary policy','inflation','interest rate'],
   Crypto: ['bitcoin','crypto','ethereum','blockchain','btc','defi'],
   FX: ['forex','dollar','euro','yen','rupee','currency','exchange rate'],
-  Banking: ['bank','loan','credit','npa','fintech','upi','mortgage','natwest','rbi'],
+  Banking: ['bank','loan','credit','npa','fintech','upi','mortgage','rbi'],
   Tech: ['tech','ai','nvidia','apple','google','microsoft','semiconductor'],
   Markets: [],
 };

@@ -1,10 +1,8 @@
-# Multi Agent Conversational AI that Keeps your data safe and secure
+# DataTalk — Multi-Agent Conversational AI for Data Analytics
 
-**NatWest Code for Purpose Hackathon 2026 | Talk to Data**
+DataTalk enables any user to ask questions about their data in plain English and receive clear, verifiable answers in seconds. No SQL, no dashboards, no data team required. Upload a dataset, ask a question, and get an answer backed by a source reference, a confidence score, and a chart where applicable.
 
-The system enables any user to ask questions about their data in plain English and receive clear, verifiable answers in seconds. No SQL, no dashboards, no data team required. Upload a dataset, ask a question, and get an answer backed by a source reference, a confidence score, and a chart where applicable.
-
-The system is built on three pillars from the NatWest problem statement: **Clarity** (answers non-experts can act on immediately), **Trust** (every response cites its data source and carries a reliability rating), and **Speed** (a multi-agent pipeline routes each question to the right tool automatically, with no manual steps required).
+The system is built on three pillars: **Clarity** (answers non-experts can act on immediately), **Trust** (every response cites its data source and carries a reliability rating), and **Speed** (a multi-agent pipeline routes each question to the right tool automatically, with no manual steps required).
 
 ---
 
@@ -14,7 +12,7 @@ The system is built on three pillars from the NatWest problem statement: **Clari
 ```mermaid
 graph LR
     U([ User]) --> FE["React\nFrontend"]
-    FE -->|REST API| BE["FastAPI\nBackend"]
+    FE -->|REST API| BE["Node.js / Express\nBackend"]
     BE --> PP["Preprocessing\nWizard"]
     PP --> O[" Orchestrator\nAgent"]
 
@@ -23,11 +21,11 @@ graph LR
     O --> WA["Search Agent"]
     O --> EA["Explain Agent"]
 
-    SA & CA -->|"Schema Only\n No Raw Data"| LLM[" Any LLM\nAPI"]
+    SA & CA -->|"Schema Only\n No Raw Data"| LLM[" Gemini\nAPI"]
 
     SA -->|DuckDB SQL| DB[("DuckDB\nSession")]
-    CA --> SB["Python\nSandbox"]
-    SB --> DB
+    CA --> SC["Python\nSidecar"]
+    SC --> SB["Sandboxed\nExecution"]
     WA --> WEB[" Web"]
     DB -.->|One .duckdb\nper session| FS[("File\nSystem")]
 
@@ -37,20 +35,22 @@ graph LR
     style FS fill:#581c87,color:#fff,stroke:#a855f7
     style O fill:#1e293b,color:#fff,stroke:#64748b
     style PP fill:#065f46,color:#fff,stroke:#10b981
+    style SC fill:#312e81,color:#fff,stroke:#818cf8
 ```
 
-### Request Flow (LLD - Sequence Diagram)
+### Request Flow (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
     actor U as User
     participant F as Frontend
-    participant B as FastAPI
+    participant B as Node.js Backend
     participant W as Preprocessing Wizard
     participant O as Orchestrator
     participant A as Agent
-    participant L as LLM API
-    participant D as Analytical DB
+    participant S as Python Sidecar
+    participant L as Gemini API
+    participant D as DuckDB
 
     U->>F: Upload CSV / Excel / JSON / TSV
     F->>B: POST /api/upload
@@ -81,9 +81,10 @@ sequenceDiagram
     else Statistical Analysis
         O->>A: Code Agent activated
         A->>L: Schema + question, returns Python code
-        Note over A: Sandbox: whitelisted libs only<br/>No file I/O · No network · 30 s hard limit
-        A->>D: Read local DataFrame
-        D-->>A: Data for local computation
+        A->>S: Send code to Python Sidecar
+        Note over S: Sandbox: whitelisted libs only<br/>No file I/O · No network · 30 s hard limit
+        S->>S: Execute in sandbox with DataFrame
+        S-->>A: stdout + charts + result
     end
 
     A->>L: Summarise result in plain English
@@ -95,16 +96,13 @@ sequenceDiagram
 
 ---
 
-https://drive.google.com/drive/folders/1fwXGXJT4ZchnP0q2d6ku4rwp8tnJidzc
-(You can use this dataset for testing, this is synthetically constructed dataset)
-
 ## Demo Video
 
 https://github.com/user-attachments/assets/936c42e9-4a5b-4fc3-8b03-3b8ef8cbb8db
 
 ---
 
-## Multi-Table Analysis (New)
+## Multi-Table Analysis
 
 Upload multiple datasets into a single session and ask questions that span them.
 
@@ -131,7 +129,7 @@ The Data Preprocessing system is a simple, guided data-cleaning step that fits r
 
 **Phase 1: Detection & Auto-fixes (`POST /api/upload`)**
 
-When the user uploads a file, the backend parses it into a temporary Pandas DataFrame and runs the `detect_issues` pipeline, producing two categories of output:
+When the user uploads a file, the backend parses it into a temporary DataFrame and runs the `detect_issues` pipeline, producing two categories of output:
 
 - **Silent Auto-fixes (Zero Risk):** Safe transformations applied immediately, such as stripping whitespace, removing fully blank rows, and dropping exact duplicates.
 - **Medium-Risk Detections:** Ambiguous issues flagged for user review, such as parsing currency symbols into numbers, standardising mixed date formats, and replacing nulls using median estimation.
@@ -152,7 +150,7 @@ The backend consumes the approved decisions, applies them via `apply_decisions`,
 User uploads file
       |
       v
-Pandas temp DataFrame (in-memory, no DB yet)
+Temp DataFrame (in-memory, no DB yet)
       |
       v
 detect_issues pipeline
@@ -180,11 +178,11 @@ detect_issues pipeline
 
 ### Extensibility
 
-The engine uses a modular, class-based pipeline (`preprocessor.py`). Adding a new data cleaning rule requires only defining a class that inherits `PreprocessStep` with a `detect()` condition and an `apply()` execution body. No changes to the core pipeline are needed.
+The engine uses a modular, class-based pipeline (`preprocessor.ts`). Adding a new data cleaning rule requires only defining a class that inherits `PreprocessStep` with a `detect()` condition and an `apply()` execution body. No changes to the core pipeline are needed.
 
 ### PDF Export Integration
 
-All data transformations, both zero-risk auto-fixes and user-approved decisions, are automatically forwarded through the chat `system` payload in `useChat.js`. When a PDF export is requested, `pdf_generator.py` parses this history to embed a chronological **"Applied Data Preprocessing" audit table** in the report, documenting exactly how the dataset was mutated before analysis began.
+All data transformations, both zero-risk auto-fixes and user-approved decisions, are automatically forwarded through the chat `system` payload in `useChat.js`. When a PDF export is requested, `pdfGenerator.ts` parses this history to embed a chronological **"Applied Data Preprocessing" audit table** in the report, documenting exactly how the dataset was mutated before analysis began.
 
 ---
 
@@ -196,7 +194,7 @@ DataTalk treats data privacy as a hard architectural constraint, not a configura
 Agents send the LLM only column names and data types. The LLM returns SQL or Python targeting that schema. Query execution happens entirely on the local server. The LLM never receives a single data value.
 
 **Layer 2: Python sandbox with hard boundaries**
-Statistical analysis requires code execution, which carries inherent risk in most systems. Every piece of LLM-generated Python runs inside a restricted interpreter with a fixed import whitelist: `pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`, `sklearn`. The `open()` builtin is removed. OS, socket, and subprocess modules are inaccessible at the interpreter level. A 30-second thread-based timeout terminates any runaway or malicious execution. No data can leave the machine through generated code.
+Statistical analysis requires code execution, which carries inherent risk in most systems. Every piece of LLM-generated Python runs inside a restricted interpreter in the Python Sidecar with a fixed import whitelist: `pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`, `sklearn`. The `open()` builtin is removed. OS, socket, and subprocess modules are inaccessible at the interpreter level. A 30-second thread-based timeout terminates any runaway or malicious execution. No data can leave the machine through generated code.
 
 **Layer 3: Session isolation**
 Every file upload is assigned a UUID. Each session maintains its own database file, its own in-memory cache, and its own connection object. No session can read, query, or infer data from another session.
@@ -216,7 +214,7 @@ Data boundary, enforced at every step:
   Preprocessing Wizard (local, in-memory only)
         |
         v
-  Analytical DB (local server, cleaned data)
+  DuckDB (local server, cleaned data)
         |
         v
   Schema extracted (names + types only)
@@ -237,12 +235,11 @@ Most natural language data tools send your data to a remote model to generate an
 |---|---|---|
 | Data sent to LLM | Full rows and values | Schema only, no data values ever |
 | Analysis depth | SQL aggregations only | SQL plus sandboxed Python: stats, ML, custom charts |
-| LLM provider | Vendor-locked to one API | Any provider, swapped via one line in `.env` |
+| LLM provider | Vendor-locked to one API | Configurable via `.env` (Gemini by default) |
 | Sensitive data handling | No mechanism exists | Column-level masking with automatic agent bypass |
 | Code execution safety | Unrestricted or absent | Whitelisted sandbox, file I/O blocked, 30 s hard timeout |
 | Answer reliability signal | None provided | Confidence score 0 to 100 with cited data source |
-| Metric consistency | Ad hoc interpretation per query | Semantic layer: define business metrics once, reuse everywhere |
-| Data quality visibility | Not surfaced | Missing value analysis, duplicate detection, 3-sigma anomaly flags |
+| Data quality visibility | Not surfaced | Missing value analysis, duplicate detection, anomaly flags |
 | Data cleaning before analysis | Not available | Interactive preprocessing wizard with user-controlled rules and full audit trail |
 | Multi-table analysis | Single dataset only | Multiple datasets with automatic JOIN query generation |
 
@@ -258,13 +255,11 @@ Most natural language data tools send your data to a remote model to generate an
 
 **Your data never touches the LLM.** Only column names and types are sent to the model. Every query runs locally. This is not a policy, it is an architectural constraint baked into the system.
 
-**Swap your LLM provider in one line.** OpenAI, Anthropic, Mistral, or any API-compatible model. Change one variable in `.env` and you are good to go.
+**Real-time financial news feed.** An integrated news aggregation system categorises headlines across Commodities, Central Bank, Crypto, FX, Banking, Tech, and Markets with severity indicators.
 
 **Sensitive columns stay hidden.** Flag any column as sensitive and the system blocks it from reaching any LLM agent, even indirectly through the Explain Agent.
 
 **Every answer comes with a confidence score.** Rated 0 to 100, with a clear reference to the source data behind the result. You always know how much to trust the output.
-
-**Define your metrics once, use them everywhere.** The semantic layer lets you set business definitions like "active user" or "churn rate" so every query uses the same logic.
 
 **Charts generated automatically from your questions.** Bar, line, scatter, heatmap. Driven entirely by natural language. No drag-and-drop, no configuration panels.
 
@@ -280,14 +275,16 @@ Most natural language data tools send your data to a remote model to generate an
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite, Tailwind CSS, Recharts, Radix UI |
-| Backend | Python 3.11, FastAPI, Uvicorn |
+| Frontend | React 19, Vite, Tailwind CSS 4, Recharts, Radix UI, Lucide Icons |
+| Backend | Node.js, TypeScript, Express |
+| Python Sidecar | Python 3.11, FastAPI, Uvicorn (sandboxed code execution) |
 | Database | DuckDB (embedded columnar store, one isolated file per session) |
-| Data processing | Pandas, NumPy |
-| Analytics | scikit-learn, scipy, matplotlib, seaborn |
-| LLM | Any provider via API (configured in `.env`) |
-| PDF reports | ReportLab |
-| Web search | DuckDuckGo (no API key required) |
+| Data Processing | Papa Parse (CSV), xlsx (Excel), Zod (validation) |
+| Sandbox Analytics | pandas, NumPy, matplotlib, seaborn, scipy, scikit-learn |
+| LLM | Google Gemini (configurable in `.env`) |
+| PDF Reports | PDFKit |
+| Web Search | DuckDuckGo (no API key required) |
+| News Aggregation | Google News scraping with NLP-based categorisation (natural) |
 
 ---
 
@@ -295,32 +292,46 @@ Most natural language data tools send your data to a remote model to generate an
 
 ### Prerequisites
 
-Python 3.11 or later and Node.js 20 or later.
+Node.js 20 or later and Python 3.11 or later.
 
 ### 1. Clone and configure
 
 ```bash
 git clone <repo-url>
 cd DataTalk
-cp backend/.env.example backend/.env
-# Add your LLM API key to backend/.env
+cp backend-node/.env.example backend-node/.env
+# Add your Gemini API key to backend-node/.env
 ```
 
-### 2. Backend
+### 2. Install dependencies
 
 ```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+npm run install:all
+pip install -r sidecar/requirements.txt
 ```
 
-### 3. Frontend
+### 3. Start all services (single command)
 
 ```bash
-cd frontend
-npm install
 npm run dev
-# Opens at http://localhost:5173
+```
+
+This starts three services concurrently:
+- **Frontend** → `http://localhost:5173` (Vite dev server)
+- **Backend** → `http://localhost:8080` (Express API)
+- **Python Sidecar** → `http://127.0.0.1:8090` (sandboxed code execution, loopback only)
+
+### Or start each service individually
+
+```bash
+# Frontend
+cd frontend && npm run dev
+
+# Backend
+cd backend-node && npm run dev
+
+# Python Sidecar
+python sidecar/main.py
 ```
 
 ---
@@ -352,9 +363,9 @@ Upload any structured dataset, then ask in plain English:
 
 The application uses a multi-agent orchestration pattern. The Orchestrator classifies each incoming question into one of five intent categories and routes it to the appropriate specialist agent. Agents use the LLM only to translate intent into executable SQL or Python. Execution happens locally against the embedded analytical database, so the LLM acts as a translator, not a data processor.
 
-DuckDB was selected for its columnar storage model, embedded execution with zero server infrastructure, and native support for Pandas DataFrames. Each session writes to its own isolated database file, ensuring complete data separation between users.
+DuckDB was selected for its columnar storage model, embedded execution with zero server infrastructure, and native support for structured data operations. Each session writes to its own isolated database file, ensuring complete data separation between users.
 
-The Python sandbox is central to the system's analytical depth. Correlations, distributions, regressions, and clustering all require code execution that SQL cannot express. The sandbox makes this safe without sacrificing capability: the LLM generates code against column metadata, the sandbox executes it in isolation, and the result flows back to the user as a chart or summary.
+The Python Sidecar is central to the system's analytical depth. Correlations, distributions, regressions, and clustering all require code execution that SQL cannot express. The sidecar makes this safe without sacrificing capability: the LLM generates code against column metadata, the sidecar executes it in an isolated sandbox, and the result flows back to the user as a chart or summary. The sidecar runs on loopback (`127.0.0.1:8090`) and is never exposed to the frontend.
 
 The Preprocessing Wizard runs before data ever reaches DuckDB. By resolving data quality issues in a separate, user-validated phase, the wizard ensures that every subsequent SQL query, Python computation, and confidence score operates on the cleanest possible version of the dataset, and that the user retains full control over what was changed.
 
@@ -366,20 +377,31 @@ Multi-table analysis extends this foundation by allowing multiple cleaned datase
 
 ```
 DataTalk/
-├── backend/
-│   ├── app/
+├── backend-node/
+│   ├── src/
 │   │   ├── agents/       # Orchestrator, SQL, Code, Search, Explain agents
-│   │   ├── core/         # DB manager, schema analysis, confidence scoring
-│   │   ├── routes/       # Upload, chat, preprocess/apply, semantic layer, PDF export
-│   │   └── utils/        # LLM client, Python sandbox, PDF generator, preprocessor
-│   ├── requirements.txt
-│   └── .env.example
+│   │   ├── core/         # DB manager, file handler, preprocessor, schema analysis
+│   │   ├── routes/       # Upload, chat, preprocess, export, news, health, debug
+│   │   ├── types/        # TypeScript type definitions
+│   │   └── utils/        # Gemini LLM client, PDF generator, sidecar client
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # React UI components, DataPreprocessingWizard.jsx
-│   │   ├── hooks/        # Chat state, backend health
-│   │   └── services/     # Axios API client
+│   │   ├── components/   # React UI: Chat, Sidebar, SplashScreen, FileUpload, Charts, etc.
+│   │   ├── context/      # React context providers
+│   │   ├── hooks/        # useChat (chat state management)
+│   │   ├── services/     # Axios API client
+│   │   └── utils/        # Frontend utilities
+│   ├── index.html
 │   └── package.json
-├── docs/                 # Architecture and planning documents
+├── sidecar/
+│   ├── main.py           # FastAPI server (loopback only, port 8090)
+│   ├── code_sandbox.py   # Sandboxed Python execution with restricted builtins
+│   └── requirements.txt
+├── sessions/             # DuckDB session files (one per upload)
+├── uploads/              # Temporary upload storage
+├── package.json          # Monorepo root (concurrently runs all services)
 └── README.md
 ```

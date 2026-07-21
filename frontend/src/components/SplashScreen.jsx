@@ -313,18 +313,17 @@ export default function SplashScreen({ onComplete }) {
 
         <div className="lp-stage">
 
-          {/* Badge + team */}
+          {/* Badge */}
           <div className="lp-top a" style={{ animationDelay: '0s' }}>
             <div className="lp-badge">
               <span className="lp-dot" />
-              NatWest Code for Purpose · 2026
+              DataTalk · AI Analytics Platform
             </div>
-            <span className="lp-team">Team: Swords of Summer</span>
           </div>
 
           {/* Headline */}
           <div className="lp-headline-block a" style={{ animationDelay: '0.08s' }}>
-            <p className="lp-kicker">Theme</p>
+            <p className="lp-kicker">AI-Powered</p>
             <h1 className="lp-h1">Talk to <span className="g">Data.</span></h1>
           </div>
 

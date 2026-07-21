@@ -1,8 +1,8 @@
 {
-  "name": "datatalk-hackathon",
+  "name": "datatalk",
   "version": "1.0.0",
   "private": true,
-  "description": "DataTalk — NatWest Hackathon monorepo root. Starts all three services.",
+  "description": "DataTalk — AI-powered conversational data analytics platform. Monorepo root that starts all three services.",
   "scripts": {
     "dev": "concurrently --names \"frontend,backend,sidecar\" --prefix-colors \"cyan,green,yellow\" \"npm run dev --prefix frontend\" \"npm run dev --prefix backend-node\" \"./venv/bin/python sidecar/main.py\"",
     "install:all": "npm install --prefix frontend && npm install --prefix backend-node"
