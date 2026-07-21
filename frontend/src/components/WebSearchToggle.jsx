@@ -1,3 +1,4 @@
+// Web search toggle — button to enable/disable real-time web search augmentation for chat queries.
 import React from 'react';
 import { Globe } from 'lucide-react';
 

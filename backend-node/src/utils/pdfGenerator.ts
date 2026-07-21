@@ -1,5 +1,5 @@
 /**
- * PDF report generator using pdfkit.
+ * PDF report generator — builds styled PDF exports of chat sessions including Q&A, charts, preprocessing audit trails, and schema summaries using PDFKit.
  */
 import PDFDocument from 'pdfkit';
 

@@ -1,3 +1,4 @@
+// Collapsible code block — syntax-highlighted display for SQL queries and Python code with copy-to-clipboard.
 import React, { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';

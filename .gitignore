@@ -49,4 +49,11 @@ backend-node/sample_data/banking_transactions.csv
 backend/sample_data/*.csv
 
 # Local test scripts
+# Local test scripts
 backend-node/test-gemini-search*.ts
+
+# Personal / unrelated documents
+*.tex
+*.docx
+*.pptx
+*.pdf

@@ -1,3 +1,4 @@
+// Chat input bar — text input with voice dictation, file attachment, web search toggle, and mode selector.
 import React, { useState, useRef } from 'react';
 import { Send, Paperclip, Mic, MicOff } from 'lucide-react';
 import ModeSelector from './ModeSelector';

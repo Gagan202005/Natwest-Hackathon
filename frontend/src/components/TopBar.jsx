@@ -1,3 +1,4 @@
+// Top navigation bar — sidebar toggle, PDF export, globe view, theme switch, and security indicators.
 import React from 'react';
 import { PanelLeftClose, PanelLeft, BarChart2, Download, FlaskConical, ShieldCheck, ShieldAlert, Globe, Shield, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';

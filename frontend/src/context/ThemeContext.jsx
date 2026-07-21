@@ -1,3 +1,4 @@
+// Theme context provider — manages dark/light mode toggle with localStorage persistence.
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext({ theme: 'dark', toggleTheme: () => {} });

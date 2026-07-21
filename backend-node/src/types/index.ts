@@ -1,3 +1,4 @@
+// Shared TypeScript interfaces for sessions, schemas, chat messages, preprocessing, and API responses.
 export interface ColumnSchema {
   name: string;
   type: 'INTEGER' | 'REAL' | 'DATETIME' | 'BOOLEAN' | 'TEXT';

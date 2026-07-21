@@ -1,3 +1,4 @@
+// Server entry point — bootstraps directories and starts the Express server on the configured port.
 import 'dotenv/config';
 import fs from 'fs';
 import app, { logger } from './app';

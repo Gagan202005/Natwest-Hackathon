@@ -1,3 +1,4 @@
+// Data preprocessing wizard — interactive modal that shows auto-fixes and lets users approve/reject medium-risk data cleaning steps.
 import React, { useState } from 'react';
 import { CheckCircle, AlertTriangle, Download, ArrowRight, Loader2, Shield, Zap } from 'lucide-react';
 import { api } from '../services/api';

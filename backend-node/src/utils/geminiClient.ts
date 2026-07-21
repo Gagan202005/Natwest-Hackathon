@@ -1,5 +1,5 @@
 /**
- * Gemini API client
+ * Gemini API client — wraps Google Generative AI SDK with rate limiting and retry logic for all LLM calls.
  */
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config';

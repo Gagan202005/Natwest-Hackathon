@@ -1,3 +1,4 @@
+// Chat message bubble — renders user/assistant messages with markdown, SQL/Python code blocks, charts, and confidence scores.
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Database, FileSpreadsheet, Copy, Check, AlertCircle, ChevronRight, ChevronDown, ChevronUp, BarChart2 } from 'lucide-react';

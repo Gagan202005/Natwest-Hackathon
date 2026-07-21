@@ -1,3 +1,4 @@
+// Root application component — manages layout, file upload flow, chat panel, sidebar, and splash screen lifecycle.
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Database } from 'lucide-react';
 import FileUpload from './components/FileUpload';

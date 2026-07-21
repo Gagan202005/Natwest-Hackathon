@@ -1,3 +1,4 @@
+// Welcome screen — shown after file upload with starter question suggestions based on the dataset schema.
 import React, { useState, useEffect } from 'react';
 import { BarChart2, Upload, Search, CreditCard, Users, Building2, Loader } from 'lucide-react';
 import { api } from '../services/api';

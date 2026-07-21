@@ -1,3 +1,4 @@
+// Sidebar panel — displays uploaded tables, column schemas, data quality scores, sensitive column toggles, and session management.
 import React, { useState } from 'react';
 import { Plus, Trash2, Database, FileSpreadsheet, Download, Lock, Layers, Edit3, BarChart2, ShieldAlert } from 'lucide-react';
 

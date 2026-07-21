@@ -1,5 +1,5 @@
 /**
- * Orchestrator Agent
+ * Orchestrator Agent — classifies user questions by intent and routes them to the appropriate specialist agent (SQL, Code, Search, or Explain).
  */
 import { gemini } from '../utils/geminiClient';
 import { runSqlAgent } from './sqlAgent';

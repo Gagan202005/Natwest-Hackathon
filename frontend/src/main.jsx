@@ -1,4 +1,4 @@
-// Entry point
+// Application entry point — mounts the React root with ThemeProvider context.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

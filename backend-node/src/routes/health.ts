@@ -1,3 +1,4 @@
+// GET /api/health — Returns server status and active session count.
 import { Router } from 'express';
 import { sessions } from '../sessions';
 

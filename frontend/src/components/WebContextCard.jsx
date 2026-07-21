@@ -1,3 +1,4 @@
+// Web context card — expandable panel showing web search results that augmented the AI's answer.
 import React, { useState } from 'react';
 import { Globe, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 

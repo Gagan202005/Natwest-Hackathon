@@ -1,5 +1,5 @@
 /**
- * Explain Agent
+ * Explain Agent — summarises raw query results into plain-English, business-friendly answers with confidence scores.
  */
 import { gemini } from '../utils/geminiClient';
 import { WebResult } from '../types';

@@ -1,5 +1,5 @@
 /**
- * SQL Agent
+ * SQL Agent — generates and executes DuckDB SQL queries from natural language questions using schema-only LLM prompting.
  */
 import { gemini } from '../utils/geminiClient';
 import { Session, ParsedRow, ChartSpec, ColumnSchema } from '../types';

@@ -1,3 +1,4 @@
+// Environment-based configuration — loads .env and exposes typed settings for port, API keys, file limits, and service URLs.
 import dotenv from 'dotenv';
 import path from 'path';
 

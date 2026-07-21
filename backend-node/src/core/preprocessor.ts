@@ -1,5 +1,5 @@
 /**
- * Data Preprocessing Engine.
+ * Data Preprocessing Engine — detects and fixes data quality issues (duplicates, whitespace, nulls, type mismatches) with a zero-risk/medium-risk classification system.
  */
 import { ParsedRow, PreprocessIssue, PreprocessResult } from '../types';
 

@@ -1,3 +1,4 @@
+// Mode selector — toggle between analysis modes (Auto, SQL, Stats, Secure) in the chat input.
 import React from 'react';
 import { Zap, Database, BarChart2, Shield } from 'lucide-react';
 

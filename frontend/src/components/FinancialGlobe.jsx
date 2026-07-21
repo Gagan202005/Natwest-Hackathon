@@ -1,3 +1,4 @@
+// Financial globe — interactive 3D globe with real-time news markers, market tickers, and category-filtered headlines.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Globe from 'react-globe.gl';
 import { X, TrendingUp, TrendingDown, Minus, Globe2, Radio } from 'lucide-react';

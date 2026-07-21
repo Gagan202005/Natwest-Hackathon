@@ -1,3 +1,4 @@
+// Status bar — bottom bar showing session ID, table count, and active LLM model name.
 import React from 'react';
 
 export default function StatusBar({ sessionId, tables = {}, modelName = 'Gemini 2.5 Flash' }) {

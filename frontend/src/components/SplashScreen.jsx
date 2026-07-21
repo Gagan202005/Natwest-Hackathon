@@ -1,3 +1,4 @@
+// Splash screen — animated landing page with feature highlights and CTA to enter the app.
 import React, { useState } from 'react';
 import { ArrowRight, Shield, FlaskConical, CheckCircle2, BarChart2, FileText, Globe, Lock } from 'lucide-react';
 

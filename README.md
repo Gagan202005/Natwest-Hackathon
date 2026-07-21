@@ -96,12 +96,6 @@ sequenceDiagram
 
 ---
 
-## Demo Video
-
-https://github.com/user-attachments/assets/936c42e9-4a5b-4fc3-8b03-3b8ef8cbb8db
-
----
-
 ## Multi-Table Analysis
 
 Upload multiple datasets into a single session and ask questions that span them.

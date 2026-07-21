@@ -1,3 +1,4 @@
+// Chart renderer — renders bar, line, pie, scatter, and area charts from query results using Recharts.
 import React from 'react';
 import {
   BarChart, Bar,

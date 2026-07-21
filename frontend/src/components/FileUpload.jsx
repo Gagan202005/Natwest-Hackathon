@@ -1,3 +1,4 @@
+// File upload component — drag-and-drop zone for CSV, Excel, JSON, and TSV files with upload progress and validation.
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';

@@ -1,3 +1,4 @@
+// Chat state hook — manages messages, file uploads, PDF export, web search, and backend communication.
 import { useState, useCallback, useRef } from 'react';
 import { api } from '../services/api';
 import { toPng } from 'html-to-image';

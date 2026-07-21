@@ -1,3 +1,4 @@
+// Express application setup — registers CORS, body parsing, and all API route handlers.
 import express from 'express';
 import cors from 'cors';
 import pino from 'pino';
