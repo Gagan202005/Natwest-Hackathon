@@ -59,8 +59,11 @@ export async function runCodeAgent(opts: {
   }
 
   try {
-    const rows = Object.values(tables)[0]?.rows ?? [];
-    const result = await sidecarExecuteCode({ code, session_id: session.db.sessionId, rows });
+    const allRows = Object.values(tables)[0]?.rows ?? [];
+    // Cap at 10,000 rows to prevent oversized JSON payloads
+    const rows = allRows.length > 10000 ? allRows.slice(0, 10000) : allRows;
+    console.log(`[CodeAgent] Sending ${rows.length} rows to sidecar (original: ${allRows.length})`);
+    const result = await sidecarExecuteCode({ code, session_id: session.db.sessionId, rows, timeout_s: 60 });
     const images = result.artifacts
       .filter((a) => a.type === 'image')
       .map((a) => a.b64);
@@ -72,11 +75,12 @@ export async function runCodeAgent(opts: {
       error: result.error,
     };
   } catch (e: any) {
+    console.error(`[CodeAgent] Sidecar call failed:`, e.message);
     return {
       python_code: code,
       stdout: '',
       matplotlib_images: [],
-      error: `Sidecar unavailable — code execution requires the Python sidecar to be running. Start it with: cd sidecar && python main.py`,
+      error: `Code execution failed: ${e.message}`,
     };
   }
 }

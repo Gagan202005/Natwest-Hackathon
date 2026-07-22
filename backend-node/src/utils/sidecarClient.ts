@@ -10,7 +10,7 @@ async function sidecarFetch<T>(path: string, body?: Record<string, any>): Promis
     method: body !== undefined ? 'POST' : 'GET',
     headers: { 'Content-Type': 'application/json' },
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(120_000),
   });
   if (!res.ok) {
     const text = await res.text();
